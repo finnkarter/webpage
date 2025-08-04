@@ -1,31 +1,49 @@
 let vacations = JSON.parse(localStorage.getItem('vacations')) || [];
+let currentViewMonth = new Date();
 
 const vacationTypes = {
-    regular: '정기휴가',
-    reward: '포상휴가',
-    consolation: '위로휴가',
-    special: '특별휴가'
-};
-
-// 기본 휴가 일수 설정
-const totalVacationDays = {
-    regular: 21,
-    reward: 10,
-    consolation: 5,
-    special: 0
+    regular: { name: '정기휴가', icon: '🏖️', color: '#4a9eff', totalDays: 21 },
+    reward: { name: '포상휴가', icon: '🎖️', color: '#4aff4a', totalDays: 10 },
+    consolation: { name: '위로휴가', icon: '💝', color: '#ff9a4a', totalDays: 5 },
+    special: { name: '특별휴가', icon: '⭐', color: '#ff4aff', totalDays: 0 }
 };
 
 function addVacation(e) {
     e.preventDefault();
     
+    const type = document.getElementById('vacationType').value;
+    const name = document.getElementById('vacationName').value.trim();
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const memo = document.getElementById('vacationMemo').value.trim();
+    
+    // 날짜 유효성 검사
+    if (new Date(startDate) > new Date(endDate)) {
+        showNotification('시작일은 종료일보다 이전이어야 합니다.', 'error');
+        return;
+    }
+    
+    // 휴가 일수 계산
+    const days = calculateDays(startDate, endDate);
+    
+    // 휴가 일수 체크
+    const usedDays = getUsedDaysByType(type);
+    const totalDays = vacationTypes[type].totalDays;
+    if (totalDays > 0 && usedDays + days > totalDays) {
+        showNotification(`${vacationTypes[type].name}의 남은 일수를 초과합니다.`, 'error');
+        return;
+    }
+    
     const vacation = {
         id: Date.now(),
-        type: document.getElementById('vacationType').value,
-        name: document.getElementById('vacationName').value || vacationTypes[document.getElementById('vacationType').value],
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        memo: document.getElementById('vacationMemo').value,
-        status: getVacationStatus(document.getElementById('startDate').value, document.getElementById('endDate').value)
+        type: type,
+        name: name,
+        startDate: startDate,
+        endDate: endDate,
+        days: days,
+        memo: memo,
+        status: getVacationStatus(startDate, endDate),
+        createdAt: new Date().toISOString()
     };
     
     vacations.push(vacation);
@@ -35,11 +53,12 @@ function addVacation(e) {
     updateCalendar();
     document.getElementById('vacationForm').reset();
     
-    showNotification('휴가가 추가되었습니다!');
+    showNotification(`${days}일의 휴가가 추가되었습니다!`, 'success');
 }
 
 function getVacationStatus(startDate, endDate) {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const start = new Date(startDate);
     const end = new Date(endDate);
     
@@ -48,14 +67,29 @@ function getVacationStatus(startDate, endDate) {
     return 'planned';
 }
 
+function calculateDays(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function getUsedDaysByType(type) {
+    return vacations
+        .filter(v => v.type === type && (v.status === 'completed' || v.status === 'ongoing'))
+        .reduce((sum, v) => sum + v.days, 0);
+}
+
 function deleteVacation(id) {
-    if (confirm('이 휴가를 삭제하시겠습니까?')) {
+    const vacation = vacations.find(v => v.id === id);
+    if (!vacation) return;
+    
+    if (confirm(`"${vacation.name}" 휴가를 삭제하시겠습니까?`)) {
         vacations = vacations.filter(v => v.id !== id);
         saveVacations();
         displayVacations();
         updateSummary();
         updateCalendar();
-        showNotification('휴가가 삭제되었습니다.');
+        showNotification('휴가가 삭제되었습니다.', 'info');
     }
 }
 
@@ -71,40 +105,44 @@ function displayVacations() {
         return;
     }
     
+    // 날짜순 정렬
     vacations.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     
     list.innerHTML = vacations.map(v => {
-        const start = new Date(v.startDate);
-        const end = new Date(v.endDate);
-        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const typeInfo = vacationTypes[v.type];
+        const dDay = calculateDDay(v.startDate);
         
-        let statusStyle = '';
-        let statusText = '';
+        let statusBadge = '';
+        let statusClass = '';
         if (v.status === 'completed') {
-            statusStyle = 'opacity: 0.6;';
-            statusText = '<span style="color: #999;">(완료)</span>';
+            statusBadge = '<span class="vacation-status status-completed">완료</span>';
+            statusClass = 'completed';
         } else if (v.status === 'ongoing') {
-            statusStyle = 'border: 2px solid var(--secondary);';
-            statusText = '<span style="color: var(--secondary);">(진행중)</span>';
+            statusBadge = '<span class="vacation-status status-ongoing">진행중</span>';
+            statusClass = 'ongoing';
+        } else if (dDay >= 0) {
+            statusBadge = `<span class="vacation-status status-planned">D-${dDay}</span>`;
         }
         
-        const dDay = Math.ceil((start - new Date()) / (1000 * 60 * 60 * 24));
-        const dDayText = v.status === 'planned' && dDay >= 0 ? `<span style="color: var(--warning);">D-${dDay}</span>` : '';
-        
         return `
-            <div class="vacation-item" style="${statusStyle}">
+            <div class="vacation-item type-${v.type} ${statusClass}">
                 <div class="vacation-header">
-                    <div>
-                        <span class="vacation-type type-${v.type}">${vacationTypes[v.type]}</span>
-                        <span class="vacation-days">${days}일</span>
-                        ${statusText}
-                        ${dDayText}
+                    <div class="vacation-info">
+                        <div class="vacation-title">${v.name}</div>
+                        <div class="vacation-badges">
+                            <span class="vacation-type type-${v.type}" style="background: ${typeInfo.color}; color: white;">
+                                ${typeInfo.icon} ${typeInfo.name}
+                            </span>
+                            <span class="vacation-days">${v.days}일</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="vacation-dates">
+                            📅 ${formatDate(v.startDate)} ~ ${formatDate(v.endDate)}
+                        </div>
+                        ${v.status === 'planned' && dDay <= 7 ? 
+                            `<div class="vacation-countdown">⏰ ${dDay}일 후 시작</div>` : ''}
                     </div>
                     <button class="delete" onclick="deleteVacation(${v.id})">삭제</button>
-                </div>
-                <h3 style="margin: 10px 0;">${v.name}</h3>
-                <div class="vacation-dates">
-                    ${formatDate(v.startDate)} ~ ${formatDate(v.endDate)}
                 </div>
                 ${v.memo ? `<div class="vacation-memo">${v.memo}</div>` : ''}
                 ${v.status === 'ongoing' ? `
@@ -118,6 +156,16 @@ function displayVacations() {
             </div>
         `;
     }).join('');
+}
+
+function calculateDDay(date) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    
+    const diff = target - today;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 function getProgress(startDate, endDate) {
@@ -146,77 +194,149 @@ function updateSummary() {
     let usedDays = 0;
     let plannedDays = 0;
     
+    // 종류별 사용일수 계산
+    const typeUsage = {
+        regular: { used: 0, planned: 0 },
+        reward: { used: 0, planned: 0 },
+        consolation: { used: 0, planned: 0 },
+        special: { used: 0, planned: 0 }
+    };
+    
     vacations.forEach(v => {
-        const start = new Date(v.startDate);
-        const end = new Date(v.endDate);
-        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        
         if (v.status === 'completed') {
-            usedDays += days;
+            usedDays += v.days;
+            typeUsage[v.type].used += v.days;
         } else if (v.status === 'planned') {
-            plannedDays += days;
+            plannedDays += v.days;
+            typeUsage[v.type].planned += v.days;
         } else if (v.status === 'ongoing') {
+            const start = new Date(v.startDate);
             const elapsed = Math.ceil((now - start) / (1000 * 60 * 60 * 24));
             usedDays += elapsed;
-            plannedDays += days - elapsed;
+            plannedDays += v.days - elapsed;
+            typeUsage[v.type].used += elapsed;
+            typeUsage[v.type].planned += v.days - elapsed;
         }
     });
     
-    const totalDays = Object.values(totalVacationDays).reduce((sum, days) => sum + days, 0);
+    const totalDays = Object.values(vacationTypes).reduce((sum, type) => sum + type.totalDays, 0);
     const remainingDays = totalDays - usedDays - plannedDays;
     
+    // 요약 카드 업데이트
     document.getElementById('totalDays').textContent = totalDays;
     document.getElementById('usedDays').textContent = usedDays;
     document.getElementById('remainingDays').textContent = remainingDays;
     document.getElementById('plannedDays').textContent = plannedDays;
+    
+    // 종류별 프로그레스 업데이트
+    ['regular', 'reward', 'consolation'].forEach(type => {
+        const total = vacationTypes[type].totalDays;
+        const used = typeUsage[type].used;
+        const percent = total > 0 ? (used / total) * 100 : 0;
+        
+        document.getElementById(`${type}Text`).textContent = `${used} / ${total}일`;
+        const bar = document.getElementById(`${type}Bar`);
+        bar.style.width = `${percent}%`;
+        bar.textContent = percent > 20 ? `${Math.round(percent)}%` : '';
+    });
 }
 
 function updateCalendar() {
-    const calendarView = document.getElementById('calendarView');
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+    const year = currentViewMonth.getFullYear();
+    const month = currentViewMonth.getMonth();
     
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startDay = firstDay.getDay();
     
     const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    document.getElementById('calendarTitle').textContent = `${year}년 ${monthNames[month]} 휴가 캘린더`;
     
-    let html = `<h3>${year}년 ${monthNames[month]}</h3>`;
-    html += '<div class="month-grid">';
+    const calendarView = document.getElementById('calendarView');
+    let html = '<div class="month-grid">';
     
     // 요일 헤더
-    dayNames.forEach(day => {
-        html += `<div style="font-weight: bold; color: var(--text-secondary);">${day}</div>`;
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    dayNames.forEach((day, index) => {
+        const color = (index === 0 || index === 6) ? 'var(--danger)' : 'var(--text-secondary)';
+        html += `<div style="font-weight: bold; color: ${color}; text-align: center;">${day}</div>`;
     });
     
     // 빈 칸
     for (let i = 0; i < startDay; i++) {
-        html += '<div class="day-cell"></div>';
+        html += '<div></div>';
     }
     
     // 날짜
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     for (let day = 1; day <= lastDay.getDate(); day++) {
         const currentDate = new Date(year, month, day);
-        const isVacation = vacations.some(v => {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        let classes = ['day-cell'];
+        let title = '';
+        
+        // 휴가 체크
+        const vacation = vacations.find(v => {
             const start = new Date(v.startDate);
             const end = new Date(v.endDate);
             return currentDate >= start && currentDate <= end;
         });
         
-        html += `<div class="day-cell ${isVacation ? 'vacation' : ''}">${day}</div>`;
+        if (vacation) {
+            classes.push('vacation');
+            title = vacation.name;
+            
+            // 시작일/종료일 체크
+            if (dateStr === vacation.startDate && dateStr === vacation.endDate) {
+                classes.push('vacation-single');
+            } else if (dateStr === vacation.startDate) {
+                classes.push('vacation-start');
+            } else if (dateStr === vacation.endDate) {
+                classes.push('vacation-end');
+            }
+        }
+        
+        // 오늘 표시
+        if (currentDate.getTime() === today.getTime()) {
+            classes.push('today');
+        }
+        
+        // 주말 표시
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+            classes.push('weekend');
+        }
+        
+        html += `<div class="${classes.join(' ')}" ${title ? `title="${title}"` : ''}>${day}</div>`;
     }
     
     html += '</div>';
     calendarView.innerHTML = html;
 }
 
-function showNotification(message) {
+function changeMonth(direction) {
+    if (direction === 0) {
+        currentViewMonth = new Date();
+    } else {
+        currentViewMonth.setMonth(currentViewMonth.getMonth() + direction);
+    }
+    updateCalendar();
+}
+
+function showNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.classList.add('show');
+    
+    // 타입별 색상
+    const colors = {
+        success: 'var(--secondary)',
+        error: 'var(--danger)',
+        info: 'var(--primary)'
+    };
+    
+    notification.style.background = colors[type] || colors.info;
     
     setTimeout(() => {
         notification.classList.remove('show');
@@ -226,9 +346,22 @@ function showNotification(message) {
 // 이벤트 리스너
 document.getElementById('vacationForm').addEventListener('submit', addVacation);
 
+// 시작일 변경시 종료일 최소값 설정
+document.getElementById('startDate').addEventListener('change', function() {
+    document.getElementById('endDate').min = this.value;
+    if (!document.getElementById('endDate').value) {
+        document.getElementById('endDate').value = this.value;
+    }
+});
+
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
     displayVacations();
     updateSummary();
     updateCalendar();
+    
+    // 오늘 날짜로 시작일 기본값 설정
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
+    document.getElementById('endDate').min = today;
 });

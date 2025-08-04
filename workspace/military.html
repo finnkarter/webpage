@@ -6,43 +6,338 @@
     <title>전역 계산기</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        .setup-form {
+            background: var(--bg-dark);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
         .military-info {
             text-align: center;
             margin: 30px 0;
         }
+        
         .days-display {
-            font-size: 4em;
+            font-size: 5em;
             font-weight: bold;
-            color: #4a9eff;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin: 20px 0;
+            animation: pulse 2s ease-in-out infinite;
         }
+        
+        .discharge-date {
+            font-size: 1.3em;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+        
+        .progress-container {
+            background: var(--bg-dark);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        
         .progress-bar {
             width: 100%;
-            height: 30px;
-            background: #1a1a1a;
-            border-radius: 15px;
+            height: 40px;
+            background: var(--bg-hover);
+            border-radius: 20px;
             overflow: hidden;
             margin: 20px 0;
+            position: relative;
         }
+        
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4a9eff, #4aff9e);
-            transition: width 0.3s;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-top: 30px;
         }
+        
         .info-card {
-            background: #1a1a1a;
-            padding: 20px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-hover));
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
         }
+        
+        .info-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74,158,255,0.3);
+        }
+        
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
         .info-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .milestone-section {
+            background: var(--bg-dark);
+            padding: 30px;
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+        
+        .milestone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .milestone-item {
+            background: var(--bg-hover);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .milestone-item.completed {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .milestone-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .milestone-percent {
             font-size: 2em;
             font-weight: bold;
-            color: #4a9eff;
+            margin-bottom: 5px;
         }
+        
+        .milestone-label {
+            font-size: 0.9em;
+        }
+        
+        .reset-btn {
+            background: var(--danger);
+            margin-top: 20px;
+        }
+        
+        .motivational-quote {
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-hover));
+            padding: 25px;
+            border-radius: 20px;
+            margin-top: 30px;
+            text-align: center;
+            font-style: italic;
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .calendar-view {
+            background: var(--bg-dark);
+            padding: 30px;
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+        
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-size: 0.9em;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .day-cell:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .day-cell.served {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .day-cell.today {
+            border: 2px solid var(--secondary);
+            font-weight: bold;
+        }
+        
+        .day-cell.weekend {
+            color: var(--danger);
+        }
+        
+        .day-cell.holiday {
+            background: var(--secondary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>전역 계산기</h1>
+        </div>
+        
+        <div class="content">
+            <!-- 설정 폼 -->
+            <div id="setupForm" class="setup-form" style="display: none;">
+                <h2>복무 정보 입력</h2>
+                <form id="militaryForm">
+                    <div>
+                        <label>입대일</label>
+                        <input type="date" id="enlistDate" required>
+                    </div>
+                    
+                    <div>
+                        <label>복무 구분</label>
+                        <select id="serviceType" required>
+                            <option value="18">육군/해병대 (18개월)</option>
+                            <option value="20">해군 (20개월)</option>
+                            <option value="21">공군 (21개월)</option>
+                            <option value="12">보충역 (12개월)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" style="width: 100%; margin-top: 20px;">설정 완료</button>
+                </form>
+            </div>
+            
+            <!-- 전역 정보 표시 -->
+            <div id="militaryInfo" style="display: none;">
+                <div class="military-info">
+                    <div class="days-display" id="remainingDays">D-000</div>
+                    <div class="discharge-date" id="dischargeDate">전역일: -</div>
+                </div>
+                
+                <!-- 진행률 -->
+                <div class="progress-container">
+                    <h3>복무 진행률</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0% 완료</div>
+                </div>
+                
+                <!-- 상세 정보 -->
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">복무한 날</div>
+                        <div class="info-value" id="servedDays">0</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">남은 주말</div>
+                        <div class="info-value" id="remainingWeekends">0</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">완료율</div>
+                        <div class="info-value" id="percentComplete">0%</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">오늘의 복무</div>
+                        <div class="info-value" id="todayServed">0일</div>
+                    </div>
+                </div>
+                
+                <!-- 마일스톤 -->
+                <div class="milestone-section">
+                    <h3>복무 마일스톤</h3>
+                    <div class="milestone-grid" id="milestoneGrid">
+                        <!-- 동적으로 생성됨 -->
+                    </div>
+                </div>
+                
+                <!-- 캘린더 뷰 -->
+                <div class="calendar-view">
+                    <h3>이번 달 복무 현황</h3>
+                    <div class="month-header">
+                        <button onclick="changeMonth(-1)">◀</button>
+                        <h4 id="currentMonth">-</h4>
+                        <button onclick="changeMonth(1)">▶</button>
+                    </div>
+                    <div class="month-grid" id="calendarGrid">
+                        <!-- 동적으로 생성됨 -->
+                    </div>
+                </div>
+                
+                <!-- 동기부여 문구 -->
+                <div class="motivational-quote" id="motivationalQuote">
+                    오늘도 하루 더 가까워졌습니다! 💪
+                </div>
+                
+                <button class="reset-btn" onclick="resetInfo()">정보 재설정</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="military.js"></script>
+</body>
+</html>
