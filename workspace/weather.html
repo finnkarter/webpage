@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .weather-display {
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .weather-icon {
+            font-size: 5em;
+            margin: 20px 0;
+        }
+        .weather-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .temp-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4a9eff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>오늘의 날씨</h1>
+        </div>
+        
+        <div class="content">
+            <div class="weather-display">
+                <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="temp-display" id="temperature">20°C</div>
+                <p id="weatherDesc">맑음</p>
+            </div>
+            
+            <div class="weather-controls">
+                <div>
+                    <label>날씨 상태</label>
+                    <select id="weatherSelect">
+                        <option value="sunny">☀️ 맑음</option>
+                        <option value="cloudy">☁️ 흐림</option>
+                        <option value="rainy">🌧️ 비</option>
+                        <option value="snowy">❄️ 눈</option>
+                        <option value="stormy">⛈️ 폭풍</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label>온도 (°C)</label>
+                    <input type="number" id="tempInput" value="20" min="-30" max="50">
+                </div>
+                
+                <div>
+                    <label>습도 (%)</label>
+                    <input type="number" id="humidityInput" value="50" min="0" max="100">
+                </div>
+                
+                <div>
+                    <label>풍속 (m/s)</label>
+                    <input type="number" id="windInput" value="5" min="0" max="50">
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h3>상세 정보</h3>
+                <p id="detailInfo"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="weather.js"></script>
+</body>
+</html>

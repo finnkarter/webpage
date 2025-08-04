@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>휴가 계획</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .vacation-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .summary-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+        
+        .summary-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .summary-label {
+            color: var(--text-secondary);
+        }
+        
+        .vacation-form {
+            background: var(--bg-dark);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .vacation-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary);
+        }
+        
+        .vacation-item {
+            background: var(--bg-dark);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            margin-left: 60px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .vacation-item::before {
+            content: '';
+            position: absolute;
+            left: -45px;
+            top: 35px;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 4px solid var(--bg-dark);
+        }
+        
+        .vacation-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(74,158,255,0.3);
+        }
+        
+        .vacation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .vacation-type {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .type-regular { 
+            background: linear-gradient(135deg, #4a9eff, #357abd);
+            color: white;
+        }
+        .type-reward { 
+            background: linear-gradient(135deg, #4aff4a, #35bd35);
+            color: white;
+        }
+        .type-consolation { 
+            background: linear-gradient(135deg, #ff9a4a, #cc7a3a);
+            color: white;
+        }
+        .type-special { 
+            background: linear-gradient(135deg, #ff4aff, #cc3acc);
+            color: white;
+        }
+        
+        .vacation-dates {
+            font-size: 1.1em;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .vacation-days {
+            display: inline-block;
+            background: var(--bg-hover);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        
+        .vacation-memo {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg-hover);
+            border-radius: 10px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .vacation-progress {
+            margin-top: 15px;
+        }
+        
+        .calendar-view {
+            background: var(--bg-dark);
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+        
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .day-cell.vacation {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>군 휴가 계획</h1>
+        </div>
+        
+        <div class="content">
+            <!-- 휴가 요약 -->
+            <div class="vacation-summary">
+                <div class="summary-card">
+                    <div class="summary-label">총 휴가일</div>
+                    <div class="summary-number" id="totalDays">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">사용한 휴가</div>
+                    <div class="summary-number" id="usedDays">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">남은 휴가</div>
+                    <div class="summary-number" id="remainingDays">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">예정된 휴가</div>
+                    <div class="summary-number" id="plannedDays">0</div>
+                </div>
+            </div>
+            
+            <!-- 휴가 입력 폼 -->
+            <div class="vacation-form">
+                <h2>새 휴가 추가</h2>
+                <form id="vacationForm">
+                    <div class="form-grid">
+                        <div>
+                            <label>휴가 종류</label>
+                            <select id="vacationType" required>
+                                <option value="regular">정기휴가</option>
+                                <option value="reward">포상휴가</option>
+                                <option value="consolation">위로휴가</option>
+                                <option value="special">특별휴가</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>휴가 이름</label>
+                            <input type="text" id="vacationName" placeholder="예: 첫 휴가, 크리스마스 휴가">
+                        </div>
+                        
+                        <div>
+                            <label>시작일</label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        
+                        <div>
+                            <label>종료일</label>
+                            <input type="date" id="endDate" required>
+                        </div>
+                        
+                        <div style="grid-column: 1/-1;">
+                            <label>메모</label>
+                            <textarea id="vacationMemo" rows="3" placeholder="휴가 계획이나 메모..."></textarea>
+                        </div>
+                        
+                        <div style="grid-column: 1/-1;">
+                            <button type="submit">휴가 추가</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 휴가 목록 (타임라인) -->
+            <div class="vacation-timeline">
+                <h2>휴가 일정</h2>
+                <div class="timeline-line"></div>
+                <div id="vacationList"></div>
+            </div>
+            
+            <!-- 캘린더 뷰 -->
+            <div class="calendar-view">
+                <h2>이번 달 휴가 캘린더</h2>
+                <div id="calendarView"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 알림 -->
+    <div class="notification" id="notification"></div>
+    
+    <script src="vacation.js"></script>
+</body>
+</html>
