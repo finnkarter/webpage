@@ -6,203 +6,28 @@
     <title>일과 관리</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        .routine-container {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-        }
-        
-        .time-blocks {
-            background: var(--bg-dark);
-            padding: 25px;
-            border-radius: 20px;
-            height: fit-content;
-        }
-        
-        .time-block {
-            display: grid;
-            grid-template-columns: 80px 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
-        
-        .time-label {
-            background: var(--bg-hover);
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        
-        .activity-slot {
-            background: var(--bg-hover);
-            padding: 15px;
-            border-radius: 10px;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        
-        .activity-slot:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .activity-slot.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-        
-        .activity-slot.current {
-            border: 2px solid var(--secondary);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(74,255,158,0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(74,255,158,0); }
-            100% { box-shadow: 0 0 0 0 rgba(74,255,158,0); }
-        }
-        
-        .activity-templates {
-            background: var(--bg-dark);
-            padding: 25px;
-            border-radius: 20px;
-        }
-        
-        .template-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .template-item {
-            background: var(--bg-hover);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            cursor: grab;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .template-item:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-        }
-        
-        .template-item:active {
-            cursor: grabbing;
-        }
-        
-        .template-icon {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .template-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .template-duration {
-            font-size: 0.9em;
-            color: var(--text-secondary);
-        }
-        
-        .routine-stats {
-            background: var(--bg-dark);
-            padding: 25px;
-            border-radius: 20px;
-            margin-top: 30px;
-        }
-        
-        .stat-bars {
-            display: grid;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .stat-bar {
-            background: var(--bg-hover);
-            padding: 15px;
-            border-radius: 10px;
-        }
-        
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .stat-progress {
-            height: 8px;
-            background: var(--bg-dark);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .stat-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-        
-        .work-fill { background: linear-gradient(90deg, #4a9eff, #357abd); }
-        .rest-fill { background: linear-gradient(90deg, #4aff9e, #35bd70); }
-        .meal-fill { background: linear-gradient(90deg, #ff9a4a, #cc7a3a); }
-        .personal-fill { background: linear-gradient(90deg, #ff4aff, #cc3acc); }
-        
-        .quick-presets {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .preset-btn {
-            flex: 1;
-            padding: 10px;
-            background: var(--bg-hover);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .preset-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-        
-        .activity-details {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 5px;
-            z-index: 10;
-            display: none;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        
-        .activity-slot:hover .activity-details {
-            display: block;
-        }
-        
-        @media (max-width: 768px) {
-            .routine-container {
-                grid-template-columns: 1fr;
-            }
-        }
+        .routine-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .time-slots { background: var(--bg-dark); padding: 20px; border-radius: 15px; height: fit-content; }
+        .time-block { display: grid; grid-template-columns: 80px 1fr; gap: 10px; margin-bottom: 10px; }
+        .time-label { background: var(--bg-hover); padding: 10px; border-radius: 8px; 
+                     text-align: center; font-weight: bold; }
+        .activity-slot { background: var(--bg-hover); padding: 15px; border-radius: 8px; 
+                        min-height: 50px; cursor: pointer; display: flex; align-items: center; 
+                        justify-content: space-between; }
+        .activity-slot.active { background: var(--primary); color: white; }
+        .activity-slot.current { border: 2px solid var(--secondary); }
+        .templates { background: var(--bg-dark); padding: 20px; border-radius: 15px; }
+        .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+                        gap: 10px; margin-top: 15px; }
+        .template-item { background: var(--bg-hover); padding: 15px; border-radius: 10px; 
+                        text-align: center; cursor: pointer; transition: all 0.3s; }
+        .template-item:hover { background: var(--primary); color: white; transform: translateY(-3px); }
+        .template-icon { font-size: 2em; margin-bottom: 5px; }
+        .preset-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .preset-btn { flex: 1; padding: 10px; background: var(--bg-dark); border: 2px solid var(--border); 
+                     border-radius: 10px; cursor: pointer; }
+        .preset-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        @media (max-width: 768px) { .routine-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -213,140 +38,65 @@
         </div>
         
         <div class="content">
-            <div class="quick-presets">
-                <button class="preset-btn" onclick="loadPreset('weekday')">
-                    <strong>평일</strong><br>
-                    <small>기본 일과</small>
-                </button>
-                <button class="preset-btn" onclick="loadPreset('weekend')">
-                    <strong>주말</strong><br>
-                    <small>휴식 중심</small>
-                </button>
-                <button class="preset-btn" onclick="loadPreset('training')">
-                    <strong>훈련</strong><br>
-                    <small>훈련 일정</small>
-                </button>
-                <button class="preset-btn" onclick="clearRoutine()">
-                    <strong>초기화</strong><br>
-                    <small>비우기</small>
-                </button>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="loadPreset('weekday')">평일</button>
+                <button class="preset-btn" onclick="loadPreset('weekend')">주말</button>
+                <button class="preset-btn" onclick="loadPreset('training')">훈련</button>
+                <button class="preset-btn" onclick="clearRoutine()">초기화</button>
             </div>
             
             <div class="routine-container">
-                <div class="time-blocks">
+                <div class="time-slots">
                     <h3>오늘의 일과</h3>
                     <div id="timeSlots"></div>
                 </div>
                 
-                <div>
-                    <div class="activity-templates">
-                        <h3>활동 템플릿</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9em;">
-                            드래그하여 시간대에 추가하세요
-                        </p>
-                        <div class="template-grid">
-                            <div class="template-item" draggable="true" data-activity='{"name":"기상/세면","icon":"🌅","duration":30,"type":"personal"}'>
-                                <div class="template-icon">🌅</div>
-                                <div class="template-name">기상/세면</div>
-                                <div class="template-duration">30분</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"아침식사","icon":"🍳","duration":30,"type":"meal"}'>
-                                <div class="template-icon">🍳</div>
-                                <div class="template-name">아침식사</div>
-                                <div class="template-duration">30분</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"일과준비","icon":"👔","duration":30,"type":"work"}'>
-                                <div class="template-icon">👔</div>
-                                <div class="template-name">일과준비</div>
-                                <div class="template-duration">30분</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"교육/훈련","icon":"📚","duration":120,"type":"work"}'>
-                                <div class="template-icon">📚</div>
-                                <div class="template-name">교육/훈련</div>
-                                <div class="template-duration">2시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"작업/근무","icon":"💼","duration":180,"type":"work"}'>
-                                <div class="template-icon">💼</div>
-                                <div class="template-name">작업/근무</div>
-                                <div class="template-duration">3시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"점심식사","icon":"🍱","duration":60,"type":"meal"}'>
-                                <div class="template-icon">🍱</div>
-                                <div class="template-name">점심식사</div>
-                                <div class="template-duration">1시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"휴식시간","icon":"☕","duration":30,"type":"rest"}'>
-                                <div class="template-icon">☕</div>
-                                <div class="template-name">휴식시간</div>
-                                <div class="template-duration">30분</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"체력단련","icon":"💪","duration":60,"type":"personal"}'>
-                                <div class="template-icon">💪</div>
-                                <div class="template-name">체력단련</div>
-                                <div class="template-duration">1시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"저녁식사","icon":"🍽️","duration":60,"type":"meal"}'>
-                                <div class="template-icon">🍽️</div>
-                                <div class="template-name">저녁식사</div>
-                                <div class="template-duration">1시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"개인정비","icon":"🧹","duration":60,"type":"personal"}'>
-                                <div class="template-icon">🧹</div>
-                                <div class="template-name">개인정비</div>
-                                <div class="template-duration">1시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"자유시간","icon":"🎮","duration":120,"type":"rest"}'>
-                                <div class="template-icon">🎮</div>
-                                <div class="template-name">자유시간</div>
-                                <div class="template-duration">2시간</div>
-                            </div>
-                            <div class="template-item" draggable="true" data-activity='{"name":"취침준비","icon":"🌙","duration":30,"type":"personal"}'>
-                                <div class="template-icon">🌙</div>
-                                <div class="template-name">취침준비</div>
-                                <div class="template-duration">30분</div>
-                            </div>
+                <div class="templates">
+                    <h3>활동 템플릿 (클릭하여 추가)</h3>
+                    <div class="template-grid">
+                        <div class="template-item" onclick="addActivity('기상/세면', '🌅')">
+                            <div class="template-icon">🌅</div>
+                            <div>기상/세면</div>
                         </div>
-                    </div>
-                    
-                    <div class="routine-stats">
-                        <h3>일과 분석</h3>
-                        <div class="stat-bars">
-                            <div class="stat-bar">
-                                <div class="stat-header">
-                                    <span>🎯 근무/작업</span>
-                                    <span id="workPercent">0%</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="stat-fill work-fill" id="workBar"></div>
-                                </div>
-                            </div>
-                            <div class="stat-bar">
-                                <div class="stat-header">
-                                    <span>😴 휴식</span>
-                                    <span id="restPercent">0%</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="stat-fill rest-fill" id="restBar"></div>
-                                </div>
-                            </div>
-                            <div class="stat-bar">
-                                <div class="stat-header">
-                                    <span>🍽️ 식사</span>
-                                    <span id="mealPercent">0%</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="stat-fill meal-fill" id="mealBar"></div>
-                                </div>
-                            </div>
-                            <div class="stat-bar">
-                                <div class="stat-header">
-                                    <span>👤 개인시간</span>
-                                    <span id="personalPercent">0%</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="stat-fill personal-fill" id="personalBar"></div>
-                                </div>
-                            </div>
+                        <div class="template-item" onclick="addActivity('아침식사', '🍳')">
+                            <div class="template-icon">🍳</div>
+                            <div>아침식사</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('점심식사', '🍱')">
+                            <div class="template-icon">🍱</div>
+                            <div>점심식사</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('저녁식사', '🍽️')">
+                            <div class="template-icon">🍽️</div>
+                            <div>저녁식사</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('교육/훈련', '📚')">
+                            <div class="template-icon">📚</div>
+                            <div>교육/훈련</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('작업/근무', '💼')">
+                            <div class="template-icon">💼</div>
+                            <div>작업/근무</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('체력단련', '💪')">
+                            <div class="template-icon">💪</div>
+                            <div>체력단련</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('휴식시간', '☕')">
+                            <div class="template-icon">☕</div>
+                            <div>휴식시간</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('개인정비', '🧹')">
+                            <div class="template-icon">🧹</div>
+                            <div>개인정비</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('자유시간', '🎮')">
+                            <div class="template-icon">🎮</div>
+                            <div>자유시간</div>
+                        </div>
+                        <div class="template-item" onclick="addActivity('취침준비', '🌙')">
+                            <div class="template-icon">🌙</div>
+                            <div>취침준비</div>
                         </div>
                     </div>
                 </div>
@@ -354,6 +104,133 @@
         </div>
     </div>
     
-    <script src="routine.js"></script>
+    <script>
+        let routine = JSON.parse(localStorage.getItem('routine')) || {};
+        let selectedTime = null;
+        
+        function generateTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            container.innerHTML = '';
+            
+            for (let hour = 5; hour < 24; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const timeKey = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    const timeBlock = document.createElement('div');
+                    timeBlock.className = 'time-block';
+                    
+                    const timeLabel = document.createElement('div');
+                    timeLabel.className = 'time-label';
+                    timeLabel.textContent = timeKey;
+                    
+                    const activitySlot = document.createElement('div');
+                    activitySlot.className = 'activity-slot';
+                    activitySlot.dataset.time = timeKey;
+                    
+                    // 현재 시간 표시
+                    const now = new Date();
+                    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${(Math.floor(now.getMinutes() / 30) * 30).toString().padStart(2, '0')}`;
+                    if (timeKey === currentTime) {
+                        activitySlot.classList.add('current');
+                    }
+                    
+                    // 저장된 활동 표시
+                    if (routine[timeKey]) {
+                        activitySlot.classList.add('active');
+                        activitySlot.innerHTML = `
+                            <span>${routine[timeKey].icon} ${routine[timeKey].name}</span>
+                            <button onclick="removeActivity('${timeKey}', event)" style="padding: 5px 10px;">×</button>
+                        `;
+                    } else {
+                        activitySlot.textContent = '클릭하여 추가';
+                        activitySlot.onclick = () => selectTime(timeKey);
+                    }
+                    
+                    timeBlock.appendChild(timeLabel);
+                    timeBlock.appendChild(activitySlot);
+                    container.appendChild(timeBlock);
+                }
+            }
+        }
+        
+        function selectTime(time) {
+            selectedTime = time;
+            alert(`${time}에 추가할 활동을 선택하세요.`);
+        }
+        
+        function addActivity(name, icon) {
+            if (!selectedTime) {
+                alert('먼저 시간을 선택하세요.');
+                return;
+            }
+            
+            routine[selectedTime] = { name, icon };
+            saveRoutine();
+            generateTimeSlots();
+            selectedTime = null;
+        }
+        
+        function removeActivity(time, event) {
+            event.stopPropagation();
+            delete routine[time];
+            saveRoutine();
+            generateTimeSlots();
+        }
+        
+        function saveRoutine() {
+            localStorage.setItem('routine', JSON.stringify(routine));
+        }
+        
+        function loadPreset(type) {
+            const presets = {
+                weekday: {
+                    '06:00': { name: '기상/세면', icon: '🌅' },
+                    '06:30': { name: '아침식사', icon: '🍳' },
+                    '08:00': { name: '작업/근무', icon: '💼' },
+                    '12:00': { name: '점심식사', icon: '🍱' },
+                    '13:00': { name: '작업/근무', icon: '💼' },
+                    '17:00': { name: '체력단련', icon: '💪' },
+                    '18:00': { name: '저녁식사', icon: '🍽️' },
+                    '19:00': { name: '개인정비', icon: '🧹' },
+                    '20:00': { name: '자유시간', icon: '🎮' },
+                    '22:00': { name: '취침준비', icon: '🌙' }
+                },
+                weekend: {
+                    '07:00': { name: '기상/세면', icon: '🌅' },
+                    '08:00': { name: '아침식사', icon: '🍳' },
+                    '09:00': { name: '자유시간', icon: '🎮' },
+                    '12:00': { name: '점심식사', icon: '🍱' },
+                    '13:00': { name: '휴식시간', icon: '☕' },
+                    '18:00': { name: '저녁식사', icon: '🍽️' },
+                    '19:00': { name: '자유시간', icon: '🎮' },
+                    '22:00': { name: '취침준비', icon: '🌙' }
+                },
+                training: {
+                    '05:30': { name: '기상/세면', icon: '🌅' },
+                    '06:00': { name: '아침식사', icon: '🍳' },
+                    '07:00': { name: '교육/훈련', icon: '📚' },
+                    '12:00': { name: '점심식사', icon: '🍱' },
+                    '13:00': { name: '교육/훈련', icon: '📚' },
+                    '18:00': { name: '저녁식사', icon: '🍽️' },
+                    '19:00': { name: '개인정비', icon: '🧹' },
+                    '21:00': { name: '취침준비', icon: '🌙' }
+                }
+            };
+            
+            routine = presets[type] || {};
+            saveRoutine();
+            generateTimeSlots();
+        }
+        
+        function clearRoutine() {
+            if (confirm('모든 일과를 삭제하시겠습니까?')) {
+                routine = {};
+                saveRoutine();
+                generateTimeSlots();
+            }
+        }
+        
+        generateTimeSlots();
+        setInterval(() => generateTimeSlots(), 30000); // 30초마다 현재 시간 업데이트
+    </script>
 </body>
 </html>

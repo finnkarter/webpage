@@ -6,292 +6,17 @@
     <title>간단 메모</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        .note-input-container {
-            background: var(--bg-dark);
-            padding: 25px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .note-input {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .note-textarea {
-            flex: 1;
-            min-height: 120px;
-            resize: vertical;
-            background: var(--bg-hover);
-            border: 2px solid var(--border);
-            color: var(--text-primary);
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-        
-        .note-textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(74,158,255,0.2);
-        }
-        
-        .note-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .category-select {
-            width: 150px;
-        }
-        
-        .color-picker {
-            display: flex;
-            gap: 8px;
-            padding: 10px;
-            background: var(--bg-hover);
-            border-radius: 10px;
-        }
-        
-        .color-option {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-        
-        .color-option.selected {
-            border-color: white;
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-        
-        .search-container {
-            background: var(--bg-dark);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .search-box {
-            position: relative;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding-left: 45px;
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-        
-        .filter-tags {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-        
-        .filter-tag {
-            background: var(--bg-hover);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .filter-tag:hover {
-            border-color: var(--primary);
-        }
-        
-        .filter-tag.active {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .notes-list {
-            display: grid;
-            gap: 20px;
-        }
-        
-        .note-item {
-            background: var(--bg-dark);
-            padding: 25px;
-            border-radius: 20px;
-            position: relative;
-            transition: all 0.3s;
-            border-left: 5px solid var(--primary);
-            cursor: pointer;
-        }
-        
-        .note-item:hover {
-            transform: translateX(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .note-item.color-yellow { border-left-color: #FFD93D; }
-        .note-item.color-green { border-left-color: #6BCF7F; }
-        .note-item.color-blue { border-left-color: #4A9EFF; }
-        .note-item.color-purple { border-left-color: #A78BFA; }
-        .note-item.color-red { border-left-color: #FF6B6B; }
-        
-        .note-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-        
-        .note-meta {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .note-category {
-            background: var(--bg-hover);
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            color: var(--text-secondary);
-        }
-        
-        .note-date {
-            font-size: 0.85em;
-            color: var(--text-secondary);
-        }
-        
-        .note-content {
-            white-space: pre-wrap;
-            word-break: break-word;
-            line-height: 1.6;
-            color: var(--text-primary);
-        }
-        
-        .note-actions {
-            opacity: 0;
-            transition: opacity 0.3s;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .note-item:hover .note-actions {
-            opacity: 1;
-        }
-        
-        .action-btn {
-            padding: 8px 16px;
-            background: var(--bg-hover);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9em;
-        }
-        
-        .action-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        .action-btn.delete:hover {
-            background: var(--danger);
-            border-color: var(--danger);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        
-        .empty-state-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .stats-bar {
-            background: var(--bg-dark);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-        }
-        
-        .stat-item {
-            flex: 1;
-        }
-        
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        
-        .stat-label {
-            font-size: 0.9em;
-            color: var(--text-secondary);
-        }
-        
-        .note-preview {
-            overflow: hidden;
-            max-height: 150px;
-            position: relative;
-        }
-        
-        .note-preview.expanded {
-            max-height: none;
-        }
-        
-        .note-preview::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: linear-gradient(transparent, var(--bg-dark));
-            pointer-events: none;
-        }
-        
-        .note-preview.expanded::after {
-            display: none;
-        }
-        
-        .expand-btn {
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .note-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .color-picker {
-                justify-content: center;
-            }
-        }
+        .note-input { display: flex; gap: 10px; margin-bottom: 20px; }
+        .note-textarea { flex: 1; min-height: 100px; resize: vertical; }
+        .note-item { background: var(--bg-dark); padding: 20px; border-radius: 10px; 
+                    margin-bottom: 15px; position: relative; border-left: 4px solid var(--primary); }
+        .note-date { font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px; }
+        .note-content { white-space: pre-wrap; word-break: break-word; }
+        .note-actions { position: absolute; top: 10px; right: 10px; }
+        .category-tag { background: var(--bg-hover); padding: 4px 12px; border-radius: 15px; 
+                       font-size: 0.85em; margin-right: 10px; }
+        .search-box { margin-bottom: 20px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -302,72 +27,94 @@
         </div>
         
         <div class="content">
-            <!-- 통계 -->
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalNotes">0</div>
-                    <div class="stat-label">전체 메모</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="todayNotes">0</div>
-                    <div class="stat-label">오늘 작성</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalCategories">0</div>
-                    <div class="stat-label">카테고리</div>
-                </div>
+            <div class="note-input">
+                <textarea id="noteInput" class="note-textarea" 
+                          placeholder="메모를 입력하세요... (Ctrl+Enter로 저장)"></textarea>
+                <select id="categorySelect">
+                    <option value="일반">일반</option>
+                    <option value="중요">중요</option>
+                    <option value="아이디어">아이디어</option>
+                    <option value="일기">일기</option>
+                </select>
+                <button onclick="addNote()">저장</button>
             </div>
             
-            <!-- 메모 입력 -->
-            <div class="note-input-container">
-                <div class="note-input">
-                    <textarea id="noteInput" class="note-textarea" 
-                              placeholder="메모를 입력하세요... (Ctrl+Enter로 저장)"></textarea>
-                </div>
-                <div class="note-controls">
-                    <select id="categorySelect" class="category-select">
-                        <option value="일반">일반</option>
-                        <option value="중요">중요</option>
-                        <option value="아이디어">아이디어</option>
-                        <option value="할일">할일</option>
-                        <option value="일기">일기</option>
-                        <option value="기타">기타</option>
-                    </select>
-                    <div class="color-picker">
-                        <div class="color-option selected" data-color="blue" style="background: #4A9EFF;"></div>
-                        <div class="color-option" data-color="yellow" style="background: #FFD93D;"></div>
-                        <div class="color-option" data-color="green" style="background: #6BCF7F;"></div>
-                        <div class="color-option" data-color="purple" style="background: #A78BFA;"></div>
-                        <div class="color-option" data-color="red" style="background: #FF6B6B;"></div>
-                    </div>
-                    <button onclick="addNote()">저장</button>
-                </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="메모 검색..." oninput="displayNotes()">
             </div>
             
-            <!-- 검색 및 필터 -->
-            <div class="search-container">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input"
-                           placeholder="메모 검색..." 
-                           oninput="searchNotes()">
-                </div>
-                <div class="filter-tags">
-                    <div class="filter-tag active" onclick="filterByCategory('all')">전체</div>
-                    <div class="filter-tag" onclick="filterByCategory('일반')">일반</div>
-                    <div class="filter-tag" onclick="filterByCategory('중요')">중요</div>
-                    <div class="filter-tag" onclick="filterByCategory('아이디어')">아이디어</div>
-                    <div class="filter-tag" onclick="filterByCategory('할일')">할일</div>
-                    <div class="filter-tag" onclick="filterByCategory('일기')">일기</div>
-                    <div class="filter-tag" onclick="filterByCategory('기타')">기타</div>
-                </div>
-            </div>
-            
-            <!-- 메모 목록 -->
-            <div class="notes-list" id="notesList"></div>
+            <div id="notesList"></div>
         </div>
     </div>
     
-    <script src="notes.js"></script>
+    <script>
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        
+        function addNote() {
+            const content = document.getElementById('noteInput').value.trim();
+            const category = document.getElementById('categorySelect').value;
+            
+            if (!content) return;
+            
+            notes.unshift({
+                id: Date.now(),
+                content,
+                category,
+                createdAt: new Date().toISOString()
+            });
+            
+            localStorage.setItem('notes', JSON.stringify(notes));
+            document.getElementById('noteInput').value = '';
+            displayNotes();
+        }
+        
+        function deleteNote(id) {
+            if (confirm('삭제하시겠습니까?')) {
+                notes = notes.filter(n => n.id !== id);
+                localStorage.setItem('notes', JSON.stringify(notes));
+                displayNotes();
+            }
+        }
+        
+        function displayNotes() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = notes.filter(n => 
+                n.content.toLowerCase().includes(search) || 
+                n.category.toLowerCase().includes(search)
+            );
+            
+            const list = document.getElementById('notesList');
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state">📝<br>메모가 없습니다</div>';
+                return;
+            }
+            
+            list.innerHTML = filtered.map(note => `
+                <div class="note-item">
+                    <div class="note-actions">
+                        <button class="delete" onclick="deleteNote(${note.id})">삭제</button>
+                    </div>
+                    <div class="note-date">
+                        <span class="category-tag">${note.category}</span>
+                        ${new Date(note.createdAt).toLocaleString('ko-KR')}
+                    </div>
+                    <div class="note-content">${escapeHtml(note.content)}</div>
+                </div>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        document.getElementById('noteInput').addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'Enter') addNote();
+        });
+        
+        displayNotes();
+    </script>
 </body>
 </html>
