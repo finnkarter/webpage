@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니 게임</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .game-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                    gap: 20px; margin-bottom: 30px; }
+        .game-card { background: var(--bg-dark); padding: 30px; border-radius: 15px; 
+                    text-align: center; cursor: pointer; transition: all 0.3s; }
+        .game-card:hover { background: var(--primary); color: white; transform: translateY(-5px); }
+        .game-icon { font-size: 3em; margin-bottom: 10px; }
+        .game-container { background: var(--bg-dark); padding: 20px; border-radius: 20px; 
+                         display: none; text-align: center; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; 
+                      margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .score-display { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+        .back-to-menu { background: var(--bg-hover); padding: 10px 20px; border-radius: 10px; 
+                       cursor: pointer; }
+        
+        /* 숫자 맞추기 게임 */
+        .number-game { max-width: 400px; margin: 0 auto; }
+        .guess-input { font-size: 2em; text-align: center; width: 150px; margin: 20px auto; }
+        .hint { font-size: 1.2em; margin: 20px 0; color: var(--text-secondary); }
+        .attempts { color: var(--warning); }
+        
+        /* 반응속도 게임 */
+        .reaction-game { max-width: 500px; margin: 0 auto; }
+        .reaction-box { width: 100%; height: 300px; background: var(--bg-hover); 
+                       border-radius: 20px; display: flex; align-items: center; 
+                       justify-content: center; font-size: 1.5em; cursor: pointer; 
+                       margin: 20px 0; user-select: none; }
+        .reaction-box.ready { background: var(--danger); color: white; }
+        .reaction-box.go { background: var(--secondary); color: white; }
+        .best-score { color: var(--secondary); margin-top: 10px; }
+        
+        /* 메모리 게임 */
+        .memory-game { max-width: 400px; margin: 0 auto; }
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; 
+                      margin: 20px 0; }
+        .memory-card { aspect-ratio: 1; background: var(--bg-hover); border-radius: 10px; 
+                      display: flex; align-items: center; justify-content: center; 
+                      font-size: 2em; cursor: pointer; transition: all 0.3s; }
+        .memory-card.flipped { background: var(--primary); color: white; }
+        .memory-card.matched { background: var(--secondary); color: white; 
+                              pointer-events: none; }
+        
+        /* 타자 게임 */
+        .typing-game { max-width: 600px; margin: 0 auto; }
+        .word-display { font-size: 2em; margin: 20px 0; padding: 20px; 
+                       background: var(--bg-hover); border-radius: 10px; }
+        .typing-input { font-size: 1.5em; text-align: center; width: 100%; }
+        .wpm-display { color: var(--primary); margin: 10px 0; }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .game-menu { grid-template-columns: 1fr; }
+            .game-header { justify-content: center; text-align: center; }
+            .reaction-box { height: 200px; font-size: 1.2em; }
+            .memory-grid { grid-template-columns: repeat(3, 1fr); }
+            .memory-card { font-size: 1.5em; }
+            .word-display { font-size: 1.5em; }
+            .guess-input { width: 100px; font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>미니 게임</h1>
+        </div>
+        
+        <div class="content">
+            <!-- 게임 메뉴 -->
+            <div class="game-menu" id="gameMenu">
+                <div class="game-card" onclick="startGame('number')">
+                    <div class="game-icon">🔢</div>
+                    <h3>숫자 맞추기</h3>
+                    <p>1~100 숫자 맞추기</p>
+                </div>
+                <div class="game-card" onclick="startGame('reaction')">
+                    <div class="game-icon">⚡</div>
+                    <h3>반응속도</h3>
+                    <p>빠른 반응 테스트</p>
+                </div>
+                <div class="game-card" onclick="startGame('memory')">
+                    <div class="game-icon">🧠</div>
+                    <h3>메모리 게임</h3>
+                    <p>카드 짝 맞추기</p>
+                </div>
+                <div class="game-card" onclick="startGame('typing')">
+                    <div class="game-icon">⌨️</div>
+                    <h3>타자 연습</h3>
+                    <p>빠른 타이핑</p>
+                </div>
+            </div>
+            
+            <!-- 숫자 맞추기 게임 -->
+            <div class="game-container" id="numberGame">
+                <div class="game-header">
+                    <h2>숫자 맞추기</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="number-game">
+                    <p>1부터 100 사이의 숫자를 맞춰보세요!</p>
+                    <input type="number" id="guessInput" class="guess-input" min="1" max="100" 
+                           onkeypress="if(event.key==='Enter')checkGuess()">
+                    <button onclick="checkGuess()" style="display: block; margin: 10px auto;">확인</button>
+                    <div class="hint" id="hint">숫자를 입력하세요</div>
+                    <div class="attempts">시도 횟수: <span id="attempts">0</span></div>
+                    <button onclick="resetNumber()" style="margin-top: 20px;">새 게임</button>
+                </div>
+            </div>
+            
+            <!-- 반응속도 게임 -->
+            <div class="game-container" id="reactionGame">
+                <div class="game-header">
+                    <h2>반응속도 테스트</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="reaction-game">
+                    <div class="reaction-box" id="reactionBox" onclick="handleReaction()">
+                        클릭하여 시작
+                    </div>
+                    <div class="score-display">반응시간: <span id="reactionTime">-</span>ms</div>
+                    <div class="best-score">최고기록: <span id="bestReaction">-</span>ms</div>
+                </div>
+            </div>
+            
+            <!-- 메모리 게임 -->
+            <div class="game-container" id="memoryGame">
+                <div class="game-header">
+                    <h2>메모리 게임</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="memory-game">
+                    <div class="score-display">
+                        이동: <span id="moves">0</span> | 
+                        매치: <span id="matches">0</span>/6
+                    </div>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <button onclick="resetMemory()">새 게임</button>
+                </div>
+            </div>
+            
+            <!-- 타자 게임 -->
+            <div class="game-container" id="typingGame">
+                <div class="game-header">
+                    <h2>타자 연습</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="typing-game">
+                    <div class="score-display">점수: <span id="typingScore">0</span></div>
+                    <div class="word-display" id="wordDisplay">시작을 누르세요</div>
+                    <input type="text" id="typingInput" class="typing-input" 
+                           placeholder="위 단어를 입력하세요" disabled
+                           oninput="checkTyping()">
+                    <div class="wpm-display">WPM: <span id="wpm">0</span></div>
+                    <button onclick="startTyping()" id="typingBtn">시작</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 게임 전역 변수
+        let targetNumber, attempts, reactionStart, memoryCards, firstCard, secondCard, 
+            moves, matches, typingWords, currentWord, typingScore, startTime;
+        
+        const emojis = ['🎮', '🎯', '🎪', '🎨', '🎭', '🎰'];
+        const words = ['군대', '휴가', '전역', '훈련', '전우', '부대', '일과', '점호', 
+                      '외출', '외박', '면회', '편지', '행군', '사격', '체력', '근무'];
+        
+        // 게임 시작
+        function startGame(game) {
+            document.getElementById('gameMenu').style.display = 'none';
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById(game + 'Game').style.display = 'block';
+            
+            if (game === 'number') resetNumber();
+            else if (game === 'memory') resetMemory();
+            else if (game === 'reaction') resetReaction();
+        }
+        
+        // 메뉴로 돌아가기
+        function backToMenu() {
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById('gameMenu').style.display = 'grid';
+        }
+        
+        // 숫자 맞추기
+        function resetNumber() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('hint').textContent = '숫자를 입력하세요';
+            document.getElementById('attempts').textContent = '0';
+        }
+        
+        function checkGuess() {
+            const guess = parseInt(document.getElementById('guessInput').value);
+            if (!guess || guess < 1 || guess > 100) return;
+            
+            attempts++;
+            document.getElementById('attempts').textContent = attempts;
+            
+            if (guess === targetNumber) {
+                document.getElementById('hint').innerHTML = 
+                    `<span style="color: var(--secondary);">정답! 🎉 ${attempts}번 만에 맞췄습니다!</span>`;
+            } else if (guess < targetNumber) {
+                document.getElementById('hint').textContent = '더 큰 숫자입니다 ⬆️';
+            } else {
+                document.getElementById('hint').textContent = '더 작은 숫자입니다 ⬇️';
+            }
+        }
+        
+        // 반응속도
+        function resetReaction() {
+            const box = document.getElementById('reactionBox');
+            box.className = 'reaction-box';
+            box.textContent = '클릭하여 시작';
+            document.getElementById('reactionTime').textContent = '-';
+            reactionStart = null;
+        }
+        
+        function handleReaction() {
+            const box = document.getElementById('reactionBox');
+            
+            if (!box.classList.contains('ready') && !box.classList.contains('go')) {
+                box.classList.add('ready');
+                box.textContent = '기다리세요...';
+                
+                const delay = Math.random() * 3000 + 1000;
+                setTimeout(() => {
+                    if (box.classList.contains('ready')) {
+                        box.classList.remove('ready');
+                        box.classList.add('go');
+                        box.textContent = '클릭!';
+                        reactionStart = Date.now();
+                    }
+                }, delay);
+            } else if (box.classList.contains('ready')) {
+                box.className = 'reaction-box';
+                box.textContent = '너무 빨라요! 다시 시작하려면 클릭';
+            } else if (box.classList.contains('go')) {
+                const time = Date.now() - reactionStart;
+                document.getElementById('reactionTime').textContent = time;
+                
+                const best = localStorage.getItem('bestReaction');
+                if (!best || time < parseInt(best)) {
+                    localStorage.setItem('bestReaction', time);
+                    document.getElementById('bestReaction').textContent = time;
+                }
+                
+                box.className = 'reaction-box';
+                box.textContent = '다시 하려면 클릭';
+            }
+        }
+        
+        // 메모리 게임
+        function resetMemory() {
+            moves = 0;
+            matches = 0;
+            firstCard = null;
+            secondCard = null;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('matches').textContent = '0';
+            
+            const grid = document.getElementById('memoryGrid');
+            const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+            
+            grid.innerHTML = cards.map((emoji, i) => 
+                `<div class="memory-card" onclick="flipCard(${i})" data-emoji="${emoji}">?</div>`
+            ).join('');
+        }
+        
+        function flipCard(index) {
+            const card = document.querySelectorAll('.memory-card')[index];
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            
+            card.classList.add('flipped');
+            card.textContent = card.dataset.emoji;
+            
+            if (!firstCard) {
+                firstCard = card;
+            } else if (!secondCard) {
+                secondCard = card;
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                
+                setTimeout(() => {
+                    if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+                        firstCard.classList.add('matched');
+                        secondCard.classList.add('matched');
+                        matches++;
+                        document.getElementById('matches').textContent = matches;
+                        
+                        if (matches === 6) {
+                            alert(`완료! ${moves}번 만에 모두 맞췄습니다!`);
+                        }
+                    } else {
+                        firstCard.classList.remove('flipped');
+                        secondCard.classList.remove('flipped');
+                        firstCard.textContent = '?';
+                        secondCard.textContent = '?';
+                    }
+                    firstCard = null;
+                    secondCard = null;
+                }, 1000);
+            }
+        }
+        
+        // 타자 게임
+        function startTyping() {
+            typingScore = 0;
+            document.getElementById('typingScore').textContent = '0';
+            document.getElementById('typingInput').disabled = false;
+            document.getElementById('typingInput').focus();
+            document.getElementById('typingBtn').textContent = '중지';
+            document.getElementById('typingBtn').onclick = stopTyping;
+            startTime = Date.now();
+            nextWord();
+        }
+        
+        function stopTyping() {
+            document.getElementById('typingInput').disabled = true;
+            document.getElementById('typingBtn').textContent = '시작';
+            document.getElementById('typingBtn').onclick = startTyping;
+            document.getElementById('wordDisplay').textContent = '시작을 누르세요';
+        }
+        
+        function nextWord() {
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById('wordDisplay').textContent = currentWord;
+            document.getElementById('typingInput').value = '';
+        }
+        
+        function checkTyping() {
+            const input = document.getElementById('typingInput').value;
+            if (input === currentWord) {
+                typingScore++;
+                document.getElementById('typingScore').textContent = typingScore;
+                
+                const elapsed = (Date.now() - startTime) / 60000;
+                const wpm = Math.round(typingScore / elapsed);
+                document.getElementById('wpm').textContent = wpm;
+                
+                nextWord();
+            }
+        }
+        
+        // 최고기록 로드
+        const bestReaction = localStorage.getItem('bestReaction');
+        if (bestReaction) {
+            document.getElementById('bestReaction').textContent = bestReaction;
+        }
+    </script>
+</body>
+</html>
