@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>픽셀 우주</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { background: #000; overflow: hidden; }
+        .space-container { position: relative; width: 100%; height: 100vh; }
+        .space-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .ui-panel { position: absolute; background: rgba(0,0,0,0.8); border: 2px solid var(--primary); 
+                   border-radius: 10px; padding: 20px; color: white; pointer-events: all; }
+        .top-panel { top: 20px; left: 20px; }
+        .right-panel { top: 20px; right: 20px; max-width: 300px; }
+        .bottom-panel { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        
+        .resource { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
+        .resource-icon { font-size: 1.5em; }
+        .resource-amount { font-weight: bold; color: var(--primary); }
+        
+        .planet-info { margin-top: 20px; }
+        .planet-name { font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }
+        .planet-stat { margin: 5px 0; font-size: 0.9em; }
+        
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .action-btn { background: var(--primary); border: none; color: white; padding: 10px 20px; 
+                     border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+        .action-btn:hover { background: var(--secondary); transform: scale(1.05); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .ship { position: absolute; font-size: 2em; transition: all 1s ease-in-out; z-index: 10; }
+        .planet { position: absolute; border-radius: 50%; cursor: pointer; transition: all 0.3s; }
+        .planet:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        
+        .star { position: absolute; background: white; border-radius: 50%; }
+        
+        .discovery-log { max-height: 200px; overflow-y: auto; margin-top: 20px; }
+        .log-entry { margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); 
+                    border-radius: 5px; font-size: 0.9em; }
+        
+        @media (max-width: 768px) {
+            .ui-panel { font-size: 0.9em; padding: 15px; }
+            .right-panel { max-width: 200px; }
+            .action-buttons { flex-direction: column; }
+            .action-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="space-container">
+        <canvas class="space-canvas" id="spaceCanvas"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="ui-panel top-panel">
+                <h2 style="margin: 0 0 10px 0;">🚀 우주 탐험</h2>
+                <div class="resource">
+                    <span class="resource-icon">⚡</span>
+                    <span>에너지: <span class="resource-amount" id="energy">100</span></span>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">💎</span>
+                    <span>크리스탈: <span class="resource-amount" id="crystal">0</span></span>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">🪐</span>
+                    <span>발견 행성: <span class="resource-amount" id="discovered">0</span></span>
+                </div>
+            </div>
+            
+            <div class="ui-panel right-panel">
+                <div class="planet-info" id="planetInfo" style="display: none;">
+                    <div class="planet-name" id="planetName">-</div>
+                    <div class="planet-stat">거리: <span id="planetDistance">-</span> 광년</div>
+                    <div class="planet-stat">크기: <span id="planetSize">-</span></div>
+                    <div class="planet-stat">자원: <span id="planetResource">-</span></div>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="explorePlanet()">탐사하기</button>
+                        <button class="action-btn" onclick="colonizePlanet()">식민지화</button>
+                    </div>
+                </div>
+                
+                <div class="discovery-log">
+                    <h3>탐험 일지</h3>
+                    <div id="logEntries"></div>
+                </div>
+            </div>
+            
+            <div class="ui-panel bottom-panel">
+                <button class="action-btn" onclick="scanArea()">주변 스캔 (10 에너지)</button>
+                <button class="action-btn" onclick="warpJump()">워프 점프 (50 에너지)</button>
+                <a href="index.html" class="action-btn" style="background: var(--danger);">종료</a>
+            </div>
+        </div>
+        
+        <div class="ship" id="ship">🚀</div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        let gameState = JSON.parse(localStorage.getItem('spaceExplorer')) || {
+            energy: 100,
+            crystal: 0,
+            discovered: 0,
+            shipX: canvas.width / 2,
+            shipY: canvas.height / 2,
+            planets: [],
+            logs: []
+        };
+        
+        let selectedPlanet = null;
+        const stars = [];
+        
+        // 별 생성
+        function createStars() {
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    brightness: Math.random()
+                });
+            }
+        }
+        
+        // 별 그리기
+        function drawStars() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // 행성 생성
+        function generatePlanet(x, y) {
+            const types = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠'];
+            const names = ['알파', '베타', '감마', '델타', '엡실론', '제타', '에타', '세타'];
+            const resources = ['에너지', '크리스탈', '금속', '가스', '물', '생명체'];
+            
+            return {
+                id: Date.now(),
+                x: x || Math.random() * canvas.width,
+                y: y || Math.random() * canvas.height,
+                type: types[Math.floor(Math.random() * types.length)],
+                name: names[Math.floor(Math.random() * names.length)] + '-' + Math.floor(Math.random() * 999),
+                size: Math.random() * 30 + 20,
+                resource: resources[Math.floor(Math.random() * resources.length)],
+                resourceAmount: Math.floor(Math.random() * 100) + 10,
+                explored: false,
+                colonized: false
+            };
+        }
+        
+        // 행성 그리기
+        function drawPlanets() {
+            gameState.planets.forEach(planet => {
+                const el = document.createElement('div');
+                el.className = 'planet';
+                el.style.left = planet.x + 'px';
+                el.style.top = planet.y + 'px';
+                el.style.fontSize = planet.size + 'px';
+                el.textContent = planet.type;
+                el.onclick = () => selectPlanet(planet);
+                
+                if (planet.explored) {
+                    el.style.border = '2px solid var(--secondary)';
+                }
+                if (planet.colonized) {
+                    el.style.border = '3px solid var(--primary)';
+                }
+                
+                document.querySelector('.space-container').appendChild(el);
+            });
+        }
+        
+        // 우주선 위치 업데이트
+        function updateShip() {
+            const ship = document.getElementById('ship');
+            ship.style.left = gameState.shipX + 'px';
+            ship.style.top = gameState.shipY + 'px';
+        }
+        
+        // 행성 선택
+        function selectPlanet(planet) {
+            selectedPlanet = planet;
+            document.getElementById('planetInfo').style.display = 'block';
+            document.getElementById('planetName').textContent = planet.name;
+            
+            const distance = Math.sqrt(
+                Math.pow(planet.x - gameState.shipX, 2) + 
+                Math.pow(planet.y - gameState.shipY, 2)
+            );
+            document.getElementById('planetDistance').textContent = Math.round(distance);
+            document.getElementById('planetSize').textContent = Math.round(planet.size) + 'km';
+            document.getElementById('planetResource').textContent = 
+                planet.explored ? `${planet.resource} (${planet.resourceAmount})` : '미확인';
+        }
+        
+        // 주변 스캔
+        function scanArea() {
+            if (gameState.energy < 10) {
+                alert('에너지가 부족합니다!');
+                return;
+            }
+            
+            gameState.energy -= 10;
+            
+            // 새 행성 발견
+            const newPlanets = Math.floor(Math.random() * 3) + 1;
+            for (let i = 0; i < newPlanets; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 200 + 100;
+                const planet = generatePlanet(
+                    gameState.shipX + Math.cos(angle) * distance,
+                    gameState.shipY + Math.sin(angle) * distance
+                );
+                gameState.planets.push(planet);
+            }
+            
+            addLog(`스캔 완료: ${newPlanets}개의 새로운 행성 발견!`);
+            updateDisplay();
+            saveGame();
+        }
+        
+        // 워프 점프
+        function warpJump() {
+            if (gameState.energy < 50) {
+                alert('에너지가 부족합니다!');
+                return;
+            }
+            
+            gameState.energy -= 50;
+            gameState.shipX = Math.random() * canvas.width;
+            gameState.shipY = Math.random() * canvas.height;
+            
+            // 새로운 구역 생성
+            gameState.planets = [];
+            const planetCount = Math.floor(Math.random() * 5) + 3;
+            for (let i = 0; i < planetCount; i++) {
+                gameState.planets.push(generatePlanet());
+            }
+            
+            addLog('워프 점프 완료! 새로운 구역에 도착했습니다.');
+            updateDisplay();
+            saveGame();
+            location.reload(); // 화면 새로고침
+        }
+        
+        // 행성 탐사
+        function explorePlanet() {
+            if (!selectedPlanet) return;
+            
+            const distance = Math.sqrt(
+                Math.pow(selectedPlanet.x - gameState.shipX, 2) + 
+                Math.pow(selectedPlanet.y - gameState.shipY, 2)
+            );
+            
+            if (distance > 100) {
+                alert('너무 멀리 있습니다! 가까이 이동하세요.');
+                return;
+            }
+            
+            if (gameState.energy < 20) {
+                alert('에너지가 부족합니다!');
+                return;
+            }
+            
+            gameState.energy -= 20;
+            selectedPlanet.explored = true;
+            
+            // 자원 획득
+            if (selectedPlanet.resource === '크리스탈') {
+                gameState.crystal += selectedPlanet.resourceAmount;
+                addLog(`${selectedPlanet.name} 탐사 완료! 크리스탈 ${selectedPlanet.resourceAmount} 획득`);
+            } else if (selectedPlanet.resource === '에너지') {
+                gameState.energy += selectedPlanet.resourceAmount;
+                addLog(`${selectedPlanet.name} 탐사 완료! 에너지 ${selectedPlanet.resourceAmount} 충전`);
+            } else {
+                addLog(`${selectedPlanet.name} 탐사 완료! ${selectedPlanet.resource} 발견`);
+            }
+            
+            gameState.discovered++;
+            updateDisplay();
+            saveGame();
+        }
+        
+        // 식민지화
+        function colonizePlanet() {
+            if (!selectedPlanet || !selectedPlanet.explored) {
+                alert('먼저 행성을 탐사해야 합니다!');
+                return;
+            }
+            
+            if (gameState.crystal < 50) {
+                alert('크리스탈이 부족합니다! (필요: 50)');
+                return;
+            }
+            
+            gameState.crystal -= 50;
+            selectedPlanet.colonized = true;
+            
+            // 지속적인 자원 생산 시작
+            addLog(`${selectedPlanet.name}을 식민지화했습니다!`);
+            updateDisplay();
+            saveGame();
+        }
+        
+        // 로그 추가
+        function addLog(message) {
+            gameState.logs.unshift({
+                time: new Date().toLocaleTimeString(),
+                message: message
+            });
+            
+            if (gameState.logs.length > 20) {
+                gameState.logs = gameState.logs.slice(0, 20);
+            }
+            
+            displayLogs();
+        }
+        
+        // 로그 표시
+        function displayLogs() {
+            const logContainer = document.getElementById('logEntries');
+            logContainer.innerHTML = gameState.logs.map(log => 
+                `<div class="log-entry">[${log.time}] ${log.message}</div>`
+            ).join('');
+        }
+        
+        // 디스플레이 업데이트
+        function updateDisplay() {
+            document.getElementById('energy').textContent = gameState.energy;
+            document.getElementById('crystal').textContent = gameState.crystal;
+            document.getElementById('discovered').textContent = gameState.discovered;
+            updateShip();
+        }
+        
+        // 게임 저장
+        function saveGame() {
+            localStorage.setItem('spaceExplorer', JSON.stringify(gameState));
+        }
+        
+// 우주선 이동
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const targetX = e.clientX - rect.left;
+    const targetY = e.clientY - rect.top;
+    
+    const distance = Math.sqrt(
+        Math.pow(targetX - gameState.shipX, 2) + 
+        Math.pow(targetY - gameState.shipY, 2)
+    );
+    
+    // 에너지 소비량 계산 (거리에 비례)
+    const energyCost = Math.round(distance / 10);
+    
+    if (gameState.energy >= energyCost) {
+        gameState.energy -= energyCost;
+        gameState.shipX = targetX;
+        gameState.shipY = targetY;
+        
+        // 우주선 위치 업데이트
+        updateShip();
+        
+        // UI 업데이트
+        updateDisplay();
+        
+        // 게임 상태 저장
+        saveGame();
+        
+        addLog(`우주선 이동 완료 (에너지 -${energyCost})`);
+    } else {
+        addLog('에너지가 부족하여 이동할 수 없습니다!');
+    }
+});
+
+// 초기화
+window.addEventListener('load', () => {
+    createStars();
+    drawStars();
+    updateDisplay();
+    drawPlanets();
+    displayLogs();
+});
+
+// 화면 크기 변경 시 캔버스 크기 조정
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drawStars();
+});

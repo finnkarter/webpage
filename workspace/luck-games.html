@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운빨 게임</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .luck-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .luck-card { background: var(--bg-dark); padding: 25px; border-radius: 15px; text-align: center; 
+                    cursor: pointer; transition: all 0.3s; }
+        .luck-card:hover { background: var(--primary); color: white; transform: translateY(-5px); }
+        .luck-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .game-container { display: none; background: var(--bg-dark); padding: 30px; border-radius: 20px; text-align: center; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .points-display { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+        
+        /* 주사위 */
+        .dice-container { display: flex; justify-content: center; gap: 20px; margin: 30px 0; }
+        .dice { width: 80px; height: 80px; background: white; border-radius: 10px; display: flex; 
+               align-items: center; justify-content: center; font-size: 2.5em; transition: all 0.3s; }
+        .dice.rolling { animation: roll 0.5s ease-in-out; }
+        @keyframes roll { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(720deg); } }
+        
+        /* 카드 */
+        .card-deck { display: flex; justify-content: center; gap: 10px; margin: 30px 0; }
+        .card { width: 100px; height: 140px; background: var(--bg-hover); border-radius: 10px; 
+               display: flex; align-items: center; justify-content: center; font-size: 3em; 
+               cursor: pointer; transition: all 0.3s; }
+        .card:hover { transform: translateY(-10px); }
+        .card.flipped { background: white; color: black; }
+        
+        /* 슬롯머신 */
+        .slot-machine { display: flex; justify-content: center; gap: 10px; margin: 30px 0; }
+        .slot { width: 80px; height: 100px; background: var(--bg-hover); border-radius: 10px; 
+               display: flex; align-items: center; justify-content: center; font-size: 2.5em; 
+               overflow: hidden; }
+        .slot-inner { transition: transform 0.5s; }
+        
+        /* 룰렛 */
+        .roulette-container { position: relative; width: 300px; height: 300px; margin: 30px auto; }
+        .roulette { width: 100%; height: 100%; border-radius: 50%; position: relative; 
+                   background: conic-gradient(#ff4a4a 0deg 45deg, #4a9eff 45deg 90deg, 
+                   #4aff4a 90deg 135deg, #ff9a4a 135deg 180deg, #ff4aff 180deg 225deg, 
+                   #4affff 225deg 270deg, #ffff4a 270deg 315deg, #ff4a9e 315deg 360deg); 
+                   transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+        .roulette-arrow { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); 
+                         width: 0; height: 0; border-left: 20px solid transparent; 
+                         border-right: 20px solid transparent; border-top: 40px solid var(--danger); }
+        
+        .result-display { font-size: 1.5em; margin: 20px 0; padding: 20px; background: var(--bg-hover); 
+                         border-radius: 10px; }
+        .win { color: var(--secondary); }
+        .lose { color: var(--danger); }
+        
+        @media (max-width: 768px) {
+            .luck-menu { grid-template-columns: repeat(2, 1fr); }
+            .dice { width: 60px; height: 60px; font-size: 2em; }
+            .card { width: 80px; height: 120px; font-size: 2.5em; }
+            .roulette-container { width: 250px; height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>운빨 게임</h1>
+        </div>
+        
+        <div class="content">
+            <div class="points-display">포인트: <span id="points">1000</span></div>
+            
+            <div class="luck-menu" id="luckMenu">
+                <div class="luck-card" onclick="startGame('dice')">
+                    <div class="luck-icon">🎲</div>
+                    <h3>주사위</h3>
+                    <p>숫자 맞추기</p>
+                </div>
+                <div class="luck-card" onclick="startGame('card')">
+                    <div class="luck-icon">🃏</div>
+                    <h3>카드 뽑기</h3>
+                    <p>높은 카드</p>
+                </div>
+                <div class="luck-card" onclick="startGame('slot')">
+                    <div class="luck-icon">🎰</div>
+                    <h3>슬롯머신</h3>
+                    <p>777 잭팟</p>
+                </div>
+                <div class="luck-card" onclick="startGame('roulette')">
+                    <div class="luck-icon">🎯</div>
+                    <h3>룰렛</h3>
+                    <p>색상 맞추기</p>
+                </div>
+                <div class="luck-card" onclick="startGame('coin')">
+                    <div class="luck-icon">🪙</div>
+                    <h3>동전 던지기</h3>
+                    <p>앞면/뒷면</p>
+                </div>
+                <div class="luck-card" onclick="startGame('rps')">
+                    <div class="luck-icon">✂️</div>
+                    <h3>가위바위보</h3>
+                    <p>운명의 대결</p>
+                </div>
+            </div>
+            
+            <!-- 주사위 게임 -->
+            <div class="game-container" id="diceGame">
+                <div class="game-header">
+                    <h2>주사위 게임</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>1~6 중 하나를 선택하세요. 맞추면 2배!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="diceBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
+                    <button onclick="guessDice(1)">1</button>
+                    <button onclick="guessDice(2)">2</button>
+                    <button onclick="guessDice(3)">3</button>
+                    <button onclick="guessDice(4)">4</button>
+                    <button onclick="guessDice(5)">5</button>
+                    <button onclick="guessDice(6)">6</button>
+                </div>
+                <div class="dice-container">
+                    <div class="dice" id="dice1">?</div>
+                </div>
+                <div class="result-display" id="diceResult"></div>
+            </div>
+            
+            <!-- 카드 게임 -->
+            <div class="game-container" id="cardGame">
+                <div class="game-header">
+                    <h2>카드 뽑기</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>카드를 선택하세요. 딜러보다 높으면 승리!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="cardBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div class="card-deck" id="cardDeck">
+                    <div class="card" onclick="drawCard(0)">?</div>
+                    <div class="card" onclick="drawCard(1)">?</div>
+                    <div class="card" onclick="drawCard(2)">?</div>
+                    <div class="card" onclick="drawCard(3)">?</div>
+                </div>
+                <div class="result-display" id="cardResult"></div>
+            </div>
+            
+            <!-- 슬롯머신 -->
+            <div class="game-container" id="slotGame">
+                <div class="game-header">
+                    <h2>슬롯머신</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>3개가 같으면 잭팟!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="slotBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div class="slot-machine">
+                    <div class="slot"><div class="slot-inner" id="slot1">7</div></div>
+                    <div class="slot"><div class="slot-inner" id="slot2">7</div></div>
+                    <div class="slot"><div class="slot-inner" id="slot3">7</div></div>
+                </div>
+                <button onclick="spinSlot()" style="padding: 15px 40px; font-size: 1.2em;">SPIN!</button>
+                <div class="result-display" id="slotResult"></div>
+            </div>
+            
+            <!-- 룰렛 -->
+            <div class="game-container" id="rouletteGame">
+                <div class="game-header">
+                    <h2>룰렛</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>색상을 선택하세요!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="rouletteBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div style="margin: 20px 0;">
+                    <button onclick="betRoulette('red')" style="background: #ff4a4a;">빨강</button>
+                    <button onclick="betRoulette('blue')" style="background: #4a9eff;">파랑</button>
+                    <button onclick="betRoulette('green')" style="background: #4aff4a;">초록</button>
+                    <button onclick="betRoulette('yellow')" style="background: #ffff4a; color: black;">노랑</button>
+                </div>
+                <div class="roulette-container">
+                    <div class="roulette" id="roulette"></div>
+                    <div class="roulette-arrow"></div>
+                </div>
+                <div class="result-display" id="rouletteResult"></div>
+            </div>
+            
+            <!-- 동전 던지기 -->
+            <div class="game-container" id="coinGame">
+                <div class="game-header">
+                    <h2>동전 던지기</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>앞면 또는 뒷면을 선택하세요!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="coinBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div style="margin: 20px 0;">
+                    <button onclick="flipCoin('앞면')" style="padding: 20px 40px;">앞면</button>
+                    <button onclick="flipCoin('뒷면')" style="padding: 20px 40px;">뒷면</button>
+                </div>
+                <div style="font-size: 5em; margin: 30px 0;" id="coinDisplay">🪙</div>
+                <div class="result-display" id="coinResult"></div>
+            </div>
+            
+            <!-- 가위바위보 -->
+            <div class="game-container" id="rpsGame">
+                <div class="game-header">
+                    <h2>가위바위보</h2>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p>컴퓨터와 대결!</p>
+                <div style="margin: 20px 0;">
+                    베팅: <input type="number" id="rpsBet" value="100" min="10" max="1000" style="width: 100px;">
+                </div>
+                <div style="margin: 20px 0;">
+                    <button onclick="playRPS('가위')" style="font-size: 3em;">✂️</button>
+                    <button onclick="playRPS('바위')" style="font-size: 3em;">✊</button>
+                    <button onclick="playRPS('보')" style="font-size: 3em;">✋</button>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 50px; margin: 30px 0;">
+                    <div>
+                        <div>당신</div>
+                        <div style="font-size: 4em;" id="playerChoice">❓</div>
+                    </div>
+                    <div style="font-size: 2em; align-self: center;">VS</div>
+                    <div>
+                        <div>컴퓨터</div>
+                        <div style="font-size: 4em;" id="computerChoice">❓</div>
+                    </div>
+                </div>
+                <div class="result-display" id="rpsResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let points = parseInt(localStorage.getItem('luckPoints')) || 1000;
+        updatePoints();
+        
+        function updatePoints() {
+            document.getElementById('points').textContent = points;
+            localStorage.setItem('luckPoints', points);
+        }
+        
+        function startGame(game) {
+            document.getElementById('luckMenu').style.display = 'none';
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById(game + 'Game').style.display = 'block';
+        }
+        
+        function backToMenu() {
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById('luckMenu').style.display = 'grid';
+        }
+        
+        // 주사위 게임
+        function guessDice(guess) {
+            const bet = parseInt(document.getElementById('diceBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            const dice = document.getElementById('dice1');
+            dice.classList.add('rolling');
+            
+            setTimeout(() => {
+                const result = Math.floor(Math.random() * 6) + 1;
+                dice.textContent = result;
+                dice.classList.remove('rolling');
+                
+                if (result === guess) {
+                    points += bet;
+                    document.getElementById('diceResult').innerHTML = 
+                        `<span class="win">맞췄습니다! +${bet} 포인트</span>`;
+                } else {
+                    points -= bet;
+                    document.getElementById('diceResult').innerHTML = 
+                        `<span class="lose">틀렸습니다! -${bet} 포인트</span>`;
+                }
+                updatePoints();
+            }, 500);
+        }
+        
+        // 카드 게임
+        function drawCard(index) {
+            const bet = parseInt(document.getElementById('cardBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const cards = document.querySelectorAll('.card');
+            
+            // 플레이어 카드
+            const playerValue = Math.floor(Math.random() * 13);
+            const playerSuit = suits[Math.floor(Math.random() * 4)];
+            cards[index].textContent = values[playerValue] + playerSuit;
+            cards[index].classList.add('flipped');
+            
+            // 딜러 카드
+            setTimeout(() => {
+                const dealerValue = Math.floor(Math.random() * 13);
+                const dealerSuit = suits[Math.floor(Math.random() * 4)];
+                const dealerCard = cards[(index + 2) % 4];
+                dealerCard.textContent = values[dealerValue] + dealerSuit;
+                dealerCard.classList.add('flipped');
+                
+                if (playerValue > dealerValue) {
+                    points += bet;
+                    document.getElementById('cardResult').innerHTML = 
+                        `<span class="win">승리! +${bet} 포인트</span>`;
+                } else if (playerValue < dealerValue) {
+                    points -= bet;
+                    document.getElementById('cardResult').innerHTML = 
+                        `<span class="lose">패배! -${bet} 포인트</span>`;
+                } else {
+                    document.getElementById('cardResult').innerHTML = '무승부!';
+                }
+                updatePoints();
+                
+                // 리셋
+                setTimeout(() => {
+                    cards.forEach(c => {
+                        c.textContent = '?';
+                        c.classList.remove('flipped');
+                    });
+                }, 3000);
+            }, 1000);
+        }
+        
+        // 슬롯머신
+        function spinSlot() {
+            const bet = parseInt(document.getElementById('slotBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            const symbols = ['7', '🍒', '🍋', '🔔', '💎', '⭐'];
+            const slots = [
+                document.getElementById('slot1'),
+                document.getElementById('slot2'),
+                document.getElementById('slot3')
+            ];
+            
+            slots.forEach((slot, i) => {
+                setTimeout(() => {
+                    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                    slot.style.transform = 'translateY(-200%)';
+                    setTimeout(() => {
+                        slot.textContent = symbol;
+                        slot.style.transform = 'translateY(0)';
+                    }, 250);
+                }, i * 200);
+            });
+            
+            setTimeout(() => {
+                const results = slots.map(s => s.textContent);
+                if (results[0] === results[1] && results[1] === results[2]) {
+                    const multiplier = results[0] === '7' ? 10 : 5;
+                    points += bet * multiplier;
+                    document.getElementById('slotResult').innerHTML = 
+                        `<span class="win">잭팟! +${bet * multiplier} 포인트</span>`;
+                } else if (results[0] === results[1] || results[1] === results[2]) {
+                    points += bet;
+                    document.getElementById('slotResult').innerHTML = 
+                        `<span class="win">2개 일치! +${bet} 포인트</span>`;
+                } else {
+                    points -= bet;
+                    document.getElementById('slotResult').innerHTML = 
+                        `<span class="lose">꽝! -${bet} 포인트</span>`;
+                }
+                updatePoints();
+            }, 1000);
+        }
+        
+        // 룰렛
+        let rouletteBet = null;
+        function betRoulette(color) {
+            const bet = parseInt(document.getElementById('rouletteBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            rouletteBet = color;
+            const roulette = document.getElementById('roulette');
+            const rotation = Math.floor(Math.random() * 360) + 720;
+            roulette.style.transform = `rotate(${rotation}deg)`;
+            
+            setTimeout(() => {
+                const angle = rotation % 360;
+                const colors = ['red', 'blue', 'green', 'yellow', 'pink', 'cyan', 'orange', 'purple'];
+                const resultIndex = Math.floor(angle / 45);
+                const resultColor = colors[resultIndex];
+                
+                if (resultColor === color || (resultIndex === 0 && color === 'red') || 
+                    (resultIndex === 1 && color === 'blue') || (resultIndex === 2 && color === 'green') ||
+                    (resultIndex === 6 && color === 'yellow')) {
+                    points += bet * 2;
+                    document.getElementById('rouletteResult').innerHTML = 
+                        `<span class="win">맞췄습니다! +${bet * 2} 포인트</span>`;
+                } else {
+                    points -= bet;
+                    document.getElementById('rouletteResult').innerHTML = 
+                        `<span class="lose">틀렸습니다! -${bet} 포인트</span>`;
+                }
+                updatePoints();
+            }, 3000);
+        }
+        
+        // 동전 던지기
+        function flipCoin(choice) {
+            const bet = parseInt(document.getElementById('coinBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            const coin = document.getElementById('coinDisplay');
+            coin.style.animation = 'none';
+            setTimeout(() => {
+                coin.style.animation = 'roll 1s ease-in-out';
+            }, 10);
+            
+            setTimeout(() => {
+                const result = Math.random() < 0.5 ? '앞면' : '뒷면';
+                coin.textContent = result === '앞면' ? '🟡' : '⚫';
+                
+                if (result === choice) {
+                    points += bet;
+                    document.getElementById('coinResult').innerHTML = 
+                        `<span class="win">${result}! 맞췄습니다! +${bet} 포인트</span>`;
+                } else {
+                    points -= bet;
+                    document.getElementById('coinResult').innerHTML = 
+                        `<span class="lose">${result}! 틀렸습니다! -${bet} 포인트</span>`;
+                }
+                updatePoints();
+            }, 1000);
+        }
+        
+        // 가위바위보
+        function playRPS(playerChoice) {
+            const bet = parseInt(document.getElementById('rpsBet').value);
+            if (bet > points) {
+                alert('포인트가 부족합니다!');
+                return;
+            }
+            
+            const choices = ['가위', '바위', '보'];
+            const emojis = { '가위': '✂️', '바위': '✊', '보': '✋' };
+            const computerChoice = choices[Math.floor(Math.random() * 3)];
+            
+            document.getElementById('playerChoice').textContent = emojis[playerChoice];
+            document.getElementById('computerChoice').textContent = '❓';
+            
+            setTimeout(() => {
+                document.getElementById('computerChoice').textContent = emojis[computerChoice];
+                
+                let result;
+                if (playerChoice === computerChoice) {
+                    result = '무승부';
+                    document.getElementById('rpsResult').innerHTML = '무승부! 다시 도전하세요';
+                } else if (
+                    (playerChoice === '가위' && computerChoice === '보') ||
+                    (playerChoice === '바위' && computerChoice === '가위') ||
+                    (playerChoice === '보' && computerChoice === '바위')
+                ) {
+                    points += bet;
+                    document.getElementById('rpsResult').innerHTML = 
+                        `<span class="win">승리! +${bet} 포인트</span>`;
+                } else {
+                    points -= bet;
+                    document.getElementById('rpsResult').innerHTML = 
+                        `<span class="lose">패배! -${bet} 포인트</span>`;
+                }
+                updatePoints();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

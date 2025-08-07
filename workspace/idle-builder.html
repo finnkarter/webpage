@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>군대 기지 건설</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .game-container { max-width: 900px; margin: 0 auto; }
+        .resources { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .resource-card { background: var(--bg-dark); padding: 15px; border-radius: 10px; text-align: center; }
+        .resource-amount { font-size: 1.8em; font-weight: bold; color: var(--primary); }
+        .resource-rate { font-size: 0.9em; color: var(--text-secondary); }
+        
+        .buildings-section { margin-bottom: 30px; }
+        .building-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .building-card { background: var(--bg-dark); padding: 20px; border-radius: 10px; cursor: pointer; 
+                        transition: all 0.3s; border: 2px solid transparent; position: relative; }
+        .building-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .building-card.affordable { background: var(--bg-hover); }
+        .building-card.maxed { opacity: 0.6; cursor: not-allowed; }
+        .building-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .building-name { font-weight: bold; font-size: 1.1em; }
+        .building-level { background: var(--primary); color: white; padding: 4px 10px; border-radius: 15px; font-size: 0.85em; }
+        .building-desc { color: var(--text-secondary); font-size: 0.9em; margin-bottom: 10px; }
+        .building-cost { background: var(--bg-hover); padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .cost-item { display: flex; justify-content: space-between; margin: 5px 0; }
+        
+        .achievements { background: var(--bg-dark); padding: 20px; border-radius: 15px; }
+        .achievement-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .achievement { background: var(--bg-hover); padding: 10px 15px; border-radius: 20px; font-size: 0.9em; }
+        .achievement.unlocked { background: var(--secondary); color: white; }
+        
+        .offline-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background: var(--bg-card); padding: 30px; border-radius: 20px; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; z-index: 1000; }
+        
+        @media (max-width: 768px) {
+            .resources { grid-template-columns: repeat(2, 1fr); }
+            .building-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>군대 기지 건설</h1>
+        </div>
+        
+        <div class="content game-container">
+            <!-- 자원 표시 -->
+            <div class="resources">
+                <div class="resource-card">
+                    <div>🪵 목재</div>
+                    <div class="resource-amount" id="wood">0</div>
+                    <div class="resource-rate">+<span id="woodRate">0</span>/초</div>
+                </div>
+                <div class="resource-card">
+                    <div>🪨 돌</div>
+                    <div class="resource-amount" id="stone">0</div>
+                    <div class="resource-rate">+<span id="stoneRate">0</span>/초</div>
+                </div>
+                <div class="resource-card">
+                    <div>🍖 식량</div>
+                    <div class="resource-amount" id="food">0</div>
+                    <div class="resource-rate">+<span id="foodRate">0</span>/초</div>
+                </div>
+                <div class="resource-card">
+                    <div>⚔️ 군사력</div>
+                    <div class="resource-amount" id="military">0</div>
+                    <div class="resource-rate">+<span id="militaryRate">0</span>/초</div>
+                </div>
+            </div>
+            
+            <!-- 건물 -->
+            <div class="buildings-section">
+                <h2>건물</h2>
+                <div class="building-grid" id="buildingGrid">
+                    <!-- 동적으로 생성 -->
+                </div>
+            </div>
+            
+            <!-- 업적 -->
+            <div class="achievements">
+                <h3>업적</h3>
+                <div class="achievement-list" id="achievementList">
+                    <!-- 동적으로 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 오프라인 보상 팝업 -->
+    <div class="offline-popup" id="offlinePopup" style="display: none;">
+        <h2>오프라인 보상</h2>
+        <p><span id="offlineTime">0</span>분 동안 다음을 획득했습니다:</p>
+        <div id="offlineRewards"></div>
+        <button onclick="closeOfflinePopup()" style="margin-top: 20px;">확인</button>
+    </div>
+    
+    <script>
+        let gameState = JSON.parse(localStorage.getItem('idleBuilder')) || {
+            resources: { wood: 0, stone: 0, food: 0, military: 0 },
+            buildings: {
+                lumberCamp: { level: 0, baseCost: { wood: 10 }, production: { wood: 1 } },
+                quarry: { level: 0, baseCost: { wood: 20, stone: 10 }, production: { stone: 1 } },
+                farm: { level: 0, baseCost: { wood: 15, stone: 5 }, production: { food: 1 } },
+                barracks: { level: 0, baseCost: { wood: 50, stone: 30, food: 20 }, production: { military: 0.5 } },
+                warehouse: { level: 0, baseCost: { wood: 100, stone: 100 }, multiplier: 1.2 },
+                academy: { level: 0, baseCost: { wood: 200, stone: 150, food: 100 }, efficiency: 1.5 }
+            },
+            lastSave: Date.now(),
+            achievements: {}
+        };
+        
+        const buildingInfo = {
+            lumberCamp: { name: '제재소', icon: '🏚️', desc: '목재를 생산합니다' },
+            quarry: { name: '채석장', icon: '⛏️', desc: '돌을 생산합니다' },
+            farm: { name: '농장', icon: '🌾', desc: '식량을 생산합니다' },
+            barracks: { name: '병영', icon: '🏛️', desc: '군사력을 생산합니다' },
+            warehouse: { name: '창고', icon: '🏭', desc: '모든 생산량 20% 증가' },
+            academy: { name: '사관학교', icon: '🎓', desc: '건물 효율 50% 증가' }
+        };
+        
+        function updateDisplay() {
+            // 자원 표시
+            for (let res of ['wood', 'stone', 'food', 'military']) {
+                document.getElementById(res).textContent = Math.floor(gameState.resources[res]).toLocaleString();
+            }
+            
+            // 생산율 계산
+            const rates = calculateRates();
+            for (let res of ['wood', 'stone', 'food', 'military']) {
+                document.getElementById(res + 'Rate').textContent = rates[res].toFixed(1);
+            }
+            
+            // 건물 표시
+            displayBuildings();
+            
+            // 업적 표시
+            displayAchievements();
+        }
+        
+        function calculateRates() {
+            const rates = { wood: 0, stone: 0, food: 0, military: 0 };
+            const warehouseBonus = 1 + (gameState.buildings.warehouse.level * 0.2);
+            const academyBonus = 1 + (gameState.buildings.academy.level * 0.5);
+            
+            for (let [name, building] of Object.entries(gameState.buildings)) {
+                if (building.production) {
+                    for (let [res, amount] of Object.entries(building.production)) {
+                        rates[res] += building.level * amount * warehouseBonus * academyBonus;
+                    }
+                }
+            }
+            
+            return rates;
+        }
+        
+        function displayBuildings() {
+            const grid = document.getElementById('buildingGrid');
+            grid.innerHTML = '';
+            
+            for (let [key, building] of Object.entries(gameState.buildings)) {
+                const info = buildingInfo[key];
+                const cost = calculateCost(key);
+                const affordable = canAfford(cost);
+                
+                const div = document.createElement('div');
+                div.className = 'building-card';
+                if (affordable) div.classList.add('affordable');
+                if (building.level >= 50) div.classList.add('maxed');
+                
+                div.innerHTML = `
+                    <div class="building-header">
+                        <span class="building-name">${info.icon} ${info.name}</span>
+                        <span class="building-level">Lv.${building.level}</span>
+                    </div>
+                    <div class="building-desc">${info.desc}</div>
+                    <div class="building-cost">
+                        ${Object.entries(cost).map(([res, amount]) => 
+                            `<div class="cost-item">
+                                <span>${getResourceIcon(res)} ${getResourceName(res)}</span>
+                                <span>${Math.floor(amount).toLocaleString()}</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                `;
+                
+                if (building.level < 50) {
+                    div.onclick = () => buyBuilding(key);
+                }
+                
+                grid.appendChild(div);
+            }
+        }
+        
+        function calculateCost(buildingKey) {
+            const building = gameState.buildings[buildingKey];
+            const cost = {};
+            
+            for (let [res, base] of Object.entries(building.baseCost)) {
+                cost[res] = Math.floor(base * Math.pow(1.5, building.level));
+            }
+            
+            return cost;
+        }
+        
+        function canAfford(cost) {
+            for (let [res, amount] of Object.entries(cost)) {
+                if (gameState.resources[res] < amount) return false;
+            }
+            return true;
+        }
+        
+        function buyBuilding(key) {
+            const cost = calculateCost(key);
+            if (!canAfford(cost)) return;
+            
+            // 비용 차감
+            for (let [res, amount] of Object.entries(cost)) {
+                gameState.resources[res] -= amount;
+            }
+            
+            // 레벨 증가
+            gameState.buildings[key].level++;
+            
+            // 업적 체크
+            checkAchievements();
+            
+            updateDisplay();
+            saveGame();
+        }
+        
+        function getResourceIcon(res) {
+            const icons = { wood: '🪵', stone: '🪨', food: '🍖', military: '⚔️' };
+            return icons[res] || '';
+        }
+        
+        function getResourceName(res) {
+            const names = { wood: '목재', stone: '돌', food: '식량', military: '군사력' };
+            return names[res] || res;
+        }
+        
+        function production() {
+            const rates = calculateRates();
+            for (let [res, rate] of Object.entries(rates)) {
+                gameState.resources[res] += rate;
+            }
+            updateDisplay();
+        }
+        
+        function checkAchievements() {
+            const achievements = {
+                firstBuilding: { name: '첫 건물', condition: () => Object.values(gameState.buildings).some(b => b.level >= 1) },
+                tenBuildings: { name: '건설 10', condition: () => Object.values(gameState.buildings).some(b => b.level >= 10) },
+                allBuildings: { name: '모든 건물', condition: () => Object.values(gameState.buildings).every(b => b.level >= 1) },
+                richWood: { name: '목재 1000', condition: () => gameState.resources.wood >= 1000 },
+                richStone: { name: '돌 1000', condition: () => gameState.resources.stone >= 1000 }
+            };
+            
+            for (let [key, achievement] of Object.entries(achievements)) {
+                if (!gameState.achievements[key] && achievement.condition()) {
+                    gameState.achievements[key] = true;
+                    showNotification(`업적 달성: ${achievement.name}`);
+                }
+            }
+        }
+        
+        function displayAchievements() {
+            const list = document.getElementById('achievementList');
+            const achievements = [
+                { key: 'firstBuilding', name: '첫 건물' },
+                { key: 'tenBuildings', name: '건설 10' },
+                { key: 'allBuildings', name: '모든 건물' },
+                { key: 'richWood', name: '목재 1000' },
+                { key: 'richStone', name: '돌 1000' }
+            ];
+            
+            list.innerHTML = achievements.map(a => 
+                `<div class="achievement ${gameState.achievements[a.key] ? 'unlocked' : ''}">${a.name}</div>`
+            ).join('');
+        }
+        
+        function showNotification(text) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; background: var(--secondary);
+                color: white; padding: 15px 25px; border-radius: 10px;
+                animation: slideIn 0.5s; z-index: 1000;
+            `;
+            notification.textContent = text;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function saveGame() {
+            gameState.lastSave = Date.now();
+            localStorage.setItem('idleBuilder', JSON.stringify(gameState));
+        }
+        
+        function calculateOfflineProgress() {
+            const now = Date.now();
+            const offlineTime = Math.floor((now - gameState.lastSave) / 1000); // 초 단위
+            
+            if (offlineTime > 60) { // 1분 이상 오프라인
+                const rates = calculateRates();
+                const rewards = {};
+                
+                for (let [res, rate] of Object.entries(rates)) {
+                    const earned = rate * Math.min(offlineTime, 3600); // 최대 1시간
+                    gameState.resources[res] += earned;
+                    rewards[res] = earned;
+                }
+                
+                // 오프라인 보상 표시
+                document.getElementById('offlineTime').textContent = Math.floor(offlineTime / 60);
+                document.getElementById('offlineRewards').innerHTML = 
+                    Object.entries(rewards).map(([res, amount]) => 
+                        `<div>${getResourceIcon(res)} ${getResourceName(res)}: +${Math.floor(amount).toLocaleString()}</div>`
+                    ).join('');
+                document.getElementById('offlinePopup').style.display = 'block';
+            }
+        }
+        
+        function closeOfflinePopup() {
+            document.getElementById('offlinePopup').style.display = 'none';
+        }
+        
+        // 게임 루프
+        setInterval(production, 1000);
+        setInterval(saveGame, 10000); // 10초마다 저장
+        
+        // 초기화
+        calculateOfflineProgress();
+        updateDisplay();
+    </script>
+</body>
+</html>

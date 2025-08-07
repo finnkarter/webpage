@@ -9,7 +9,8 @@
         .game-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
                     gap: 20px; margin-bottom: 30px; }
         .game-card { background: var(--bg-dark); padding: 30px; border-radius: 15px; 
-                    text-align: center; cursor: pointer; transition: all 0.3s; }
+                    text-align: center; cursor: pointer; transition: all 0.3s; 
+                    text-decoration: none; color: var(--text-primary); display: block; }
         .game-card:hover { background: var(--primary); color: white; transform: translateY(-5px); }
         .game-icon { font-size: 3em; margin-bottom: 10px; }
         .game-container { background: var(--bg-dark); padding: 20px; border-radius: 20px; 
@@ -19,6 +20,10 @@
         .score-display { font-size: 1.5em; font-weight: bold; color: var(--primary); }
         .back-to-menu { background: var(--bg-hover); padding: 10px 20px; border-radius: 10px; 
                        cursor: pointer; }
+        
+        .category-section { margin-bottom: 40px; }
+        .category-title { font-size: 1.5em; margin-bottom: 20px; color: var(--primary); 
+                         border-bottom: 2px solid var(--border); padding-bottom: 10px; }
         
         /* 숫자 맞추기 게임 */
         .number-game { max-width: 400px; margin: 0 auto; }
@@ -74,30 +79,71 @@
         </div>
         
         <div class="content">
-            <!-- 게임 메뉴 -->
-            <div class="game-menu" id="gameMenu">
-                <div class="game-card" onclick="startGame('number')">
-                    <div class="game-icon">🔢</div>
-                    <h3>숫자 맞추기</h3>
-                    <p>1~100 숫자 맞추기</p>
-                </div>
-                <div class="game-card" onclick="startGame('reaction')">
-                    <div class="game-icon">⚡</div>
-                    <h3>반응속도</h3>
-                    <p>빠른 반응 테스트</p>
-                </div>
-                <div class="game-card" onclick="startGame('memory')">
-                    <div class="game-icon">🧠</div>
-                    <h3>메모리 게임</h3>
-                    <p>카드 짝 맞추기</p>
-                </div>
-                <div class="game-card" onclick="startGame('typing')">
-                    <div class="game-icon">⌨️</div>
-                    <h3>타자 연습</h3>
-                    <p>빠른 타이핑</p>
+            <!-- 간단한 게임 -->
+            <div class="category-section">
+                <h2 class="category-title">🎮 간단한 게임</h2>
+                <div class="game-menu">
+                    <div class="game-card" onclick="startGame('number')">
+                        <div class="game-icon">🔢</div>
+                        <h3>숫자 맞추기</h3>
+                        <p>1~100 숫자 맞추기</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('reaction')">
+                        <div class="game-icon">⚡</div>
+                        <h3>반응속도</h3>
+                        <p>빠른 반응 테스트</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('memory')">
+                        <div class="game-icon">🧠</div>
+                        <h3>메모리 게임</h3>
+                        <p>카드 짝 맞추기</p>
+                    </div>
+                    <div class="game-card" onclick="startGame('typing')">
+                        <div class="game-icon">⌨️</div>
+                        <h3>타자 연습</h3>
+                        <p>빠른 타이핑</p>
+                    </div>
                 </div>
             </div>
             
+            <!-- 근무용 게임 -->
+            <div class="category-section">
+                <h2 class="category-title">🎯 근무 시간용 게임</h2>
+                <div class="game-menu">
+                    <a href="clicker.html" class="game-card">
+                        <div class="game-icon">🎖️</div>
+                        <h3>군대 클리커</h3>
+                        <p>방치형 클릭 게임</p>
+                    </a>
+                    <a href="puzzle.html" class="game-card">
+                        <div class="game-icon">🧩</div>
+                        <h3>퍼즐 모음</h3>
+                        <p>스도쿠, 지뢰찾기, 2048</p>
+                    </a>
+                    <a href="idle-builder.html" class="game-card">
+                        <div class="game-icon">🏗️</div>
+                        <h3>기지 건설</h3>
+                        <p>방치형 건설 게임</p>
+                    </a>
+                    <a href="luck.html" class="game-card">
+                        <div class="game-icon">🎲</div>
+                        <h3>운빨 게임</h3>
+                        <p>주사위, 카드, 룰렛</p>
+                    </a>
+                    <a href="space.html" class="game-card">
+                        <div class="game-icon">🌌</div>
+                        <h3>픽셀 우주</h3>
+                        <p>우주 탐험 시뮬</p>
+                    </a>
+                    <a href="words.html" class="game-card">
+                        <div class="game-icon">🔤</div>
+                        <h3>단어 게임</h3>
+                        <p>끝말잇기, 초성퀴즈</p>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 간단한 게임들 (인라인) -->
             <!-- 숫자 맞추기 게임 -->
             <div class="game-container" id="numberGame">
                 <div class="game-header">
@@ -176,7 +222,7 @@
         
         // 게임 시작
         function startGame(game) {
-            document.getElementById('gameMenu').style.display = 'none';
+            document.querySelectorAll('.category-section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
             document.getElementById(game + 'Game').style.display = 'block';
             
@@ -188,7 +234,7 @@
         // 메뉴로 돌아가기
         function backToMenu() {
             document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
-            document.getElementById('gameMenu').style.display = 'grid';
+            document.querySelectorAll('.category-section').forEach(s => s.style.display = 'block');
         }
         
         // 숫자 맞추기
@@ -358,5 +404,74 @@
             document.getElementById('bestReaction').textContent = bestReaction;
         }
     </script>
+</body>
+</html>
+            
+            <!-- 숫자 맞추기 게임 -->
+            <div class="game-container" id="numberGame">
+                <div class="game-header">
+                    <h2>숫자 맞추기</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="number-game">
+                    <p>1부터 100 사이의 숫자를 맞춰보세요!</p>
+                    <input type="number" id="guessInput" class="guess-input" min="1" max="100" 
+                           onkeypress="if(event.key==='Enter')checkGuess()">
+                    <button onclick="checkGuess()" style="display: block; margin: 10px auto;">확인</button>
+                    <div class="hint" id="hint">숫자를 입력하세요</div>
+                    <div class="attempts">시도 횟수: <span id="attempts">0</span></div>
+                    <button onclick="resetNumber()" style="margin-top: 20px;">새 게임</button>
+                </div>
+            </div>
+            
+            <!-- 반응속도 게임 -->
+            <div class="game-container" id="reactionGame">
+                <div class="game-header">
+                    <h2>반응속도 테스트</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="reaction-game">
+                    <div class="reaction-box" id="reactionBox" onclick="handleReaction()">
+                        클릭하여 시작
+                    </div>
+                    <div class="score-display">반응시간: <span id="reactionTime">-</span>ms</div>
+                    <div class="best-score">최고기록: <span id="bestReaction">-</span>ms</div>
+                </div>
+            </div>
+            
+            <!-- 메모리 게임 -->
+            <div class="game-container" id="memoryGame">
+                <div class="game-header">
+                    <h2>메모리 게임</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="memory-game">
+                    <div class="score-display">
+                        이동: <span id="moves">0</span> | 
+                        매치: <span id="matches">0</span>/6
+                    </div>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <button onclick="resetMemory()">새 게임</button>
+                </div>
+            </div>
+            
+            <!-- 타자 게임 -->
+            <div class="game-container" id="typingGame">
+                <div class="game-header">
+                    <h2>타자 연습</h2>
+                    <button class="back-to-menu" onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="typing-game">
+                    <div class="score-display">점수: <span id="typingScore">0</span></div>
+                    <div class="word-display" id="wordDisplay">시작을 누르세요</div>
+                    <input type="text" id="typingInput" class="typing-input" 
+                           placeholder="위 단어를 입력하세요" disabled
+                           oninput="checkTyping()">
+                    <div class="wpm-display">WPM: <span id="wpm">0</span></div>
+                    <button onclick="startTyping()" id="typingBtn">시작</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

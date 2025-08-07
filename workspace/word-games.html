@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어 게임</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .word-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .word-card { background: var(--bg-dark); padding: 30px; border-radius: 15px; text-align: center; 
+                    cursor: pointer; transition: all 0.3s; }
+        .word-card:hover { background: var(--primary); color: white; transform: translateY(-5px); }
+        .word-icon { font-size: 3em; margin-bottom: 10px; }
+        .game-container { display: none; background: var(--bg-dark); padding: 30px; border-radius: 20px; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .score-display { font-size: 1.3em; color: var(--primary); }
+        
+        /* 끝말잇기 */
+        .chain-container { max-width: 600px; margin: 0 auto; }
+        .word-chain { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; padding: 20px; 
+                     background: var(--bg-hover); border-radius: 10px; min-height: 100px; }
+        .chain-word { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; }
+        .word-input { font-size: 1.5em; text-align: center; width: 100%; max-width: 300px; margin: 20px auto; }
+        
+        /* 초성 퀴즈 */
+        .chosung-display { font-size: 3em; text-align: center; margin: 30px 0; letter-spacing: 10px; }
+        .hint-display { text-align: center; color: var(--text-secondary); margin: 10px 0; }
+        
+        /* 스피드 퀴즈 */
+        .speed-word { font-size: 2.5em; text-align: center; margin: 30px 0; padding: 30px; 
+                     background: var(--bg-hover); border-radius: 15px; }
+        .timer-bar { width: 100%; height: 10px; background: var(--bg-hover); border-radius: 5px; 
+                    overflow: hidden; margin: 20px 0; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); 
+                     transition: width 0.1s linear; }
+        
+        /* 연상 게임 */
+        .association-word { font-size: 2em; text-align: center; margin: 20px 0; }
+        .association-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
+        .association-item { background: var(--bg-hover); padding: 10px 20px; border-radius: 20px; 
+                           cursor: pointer; transition: all 0.3s; }
+        .association-item:hover { background: var(--primary); color: white; }
+        .association-item.correct { background: var(--secondary); color: white; }
+        .association-item.wrong { background: var(--danger); color: white; }
+        
+        /* 암호 해독 */
+        .cipher-text { font-size: 1.8em; text-align: center; margin: 30px 0; font-family: monospace; 
+                      letter-spacing: 3px; }
+        .cipher-input { font-size: 1.5em; width: 100%; max-width: 500px; margin: 20px auto; 
+                       font-family: monospace; }
+        
+        /* 문장 만들기 */
+        .words-pool { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; 
+                     padding: 20px; background: var(--bg-hover); border-radius: 10px; min-height: 80px; }
+        .word-chip { background: var(--primary); color: white; padding: 8px 16px; border-radius: 20px; 
+                    cursor: pointer; transition: all 0.3s; }
+        .word-chip:hover { transform: scale(1.1); }
+        .sentence-area { min-height: 80px; padding: 20px; background: var(--bg-card); border-radius: 10px; 
+                        margin: 20px 0; border: 2px dashed var(--border); }
+        
+        @media (max-width: 768px) {
+            .word-menu { grid-template-columns: 1fr; }
+            .chosung-display { font-size: 2em; letter-spacing: 5px; }
+            .speed-word { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 뒤로</a>
+            <h1>단어 게임</h1>
+        </div>
+        
+        <div class="content">
+            <div class="word-menu" id="wordMenu">
+                <div class="word-card" onclick="startGame('chain')">
+                    <div class="word-icon">🔗</div>
+                    <h3>끝말잇기</h3>
+                    <p>이어가기</p>
+                </div>
+                <div class="word-card" onclick="startGame('chosung')">
+                    <div class="word-icon">🔤</div>
+                    <h3>초성 퀴즈</h3>
+                    <p>ㅊㅅㅋㅈ</p>
+                </div>
+                <div class="word-card" onclick="startGame('speed')">
+                    <div class="word-icon">⚡</div>
+                    <h3>스피드 퀴즈</h3>
+                    <p>빠른 입력</p>
+                </div>
+                <div class="word-card" onclick="startGame('association')">
+                    <div class="word-icon">💭</div>
+                    <h3>연상 게임</h3>
+                    <p>관련 단어</p>
+                </div>
+                <div class="word-card" onclick="startGame('cipher')">
+                    <div class="word-icon">🔐</div>
+                    <h3>암호 해독</h3>
+                    <p>숨은 단어</p>
+                </div>
+                <div class="word-card" onclick="startGame('sentence')">
+                    <div class="word-icon">📝</div>
+                    <h3>문장 만들기</h3>
+                    <p>단어 조합</p>
+                </div>
+            </div>
+            
+            <!-- 끝말잇기 -->
+            <div class="game-container" id="chainGame">
+                <div class="game-header">
+                    <h2>끝말잇기</h2>
+                    <div class="score-display">점수: <span id="chainScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="chain-container">
+                    <div class="word-chain" id="wordChain"></div>
+                    <input type="text" id="chainInput" class="word-input" 
+                           placeholder="단어를 입력하세요" onkeypress="if(event.key==='Enter')submitChain()">
+                    <div style="text-align: center;">
+                        <button onclick="submitChain()">입력</button>
+                        <button onclick="newChain()">새 게임</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 초성 퀴즈 -->
+            <div class="game-container" id="chosungGame">
+                <div class="game-header">
+                    <h2>초성 퀴즈</h2>
+                    <div class="score-display">점수: <span id="chosungScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="chosung-display" id="chosungDisplay">ㄱㄷㅊㄹㄱ</div>
+                <div class="hint-display">힌트: <span id="chosungHint">군대 관련 단어</span></div>
+                <input type="text" id="chosungInput" class="word-input" 
+                       placeholder="정답을 입력하세요" onkeypress="if(event.key==='Enter')checkChosung()">
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="checkChosung()">확인</button>
+                    <button onclick="newChosung()">다음 문제</button>
+                </div>
+            </div>
+            
+            <!-- 스피드 퀴즈 -->
+            <div class="game-container" id="speedGame">
+                <div class="game-header">
+                    <h2>스피드 퀴즈</h2>
+                    <div class="score-display">점수: <span id="speedScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timerFill"></div>
+                </div>
+                <div class="speed-word" id="speedWord">준비</div>
+                <input type="text" id="speedInput" class="word-input" 
+                       placeholder="빠르게 입력하세요" oninput="checkSpeed()">
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="startSpeed()">시작</button>
+                </div>
+            </div>
+            
+            <!-- 연상 게임 -->
+            <div class="game-container" id="associationGame">
+                <div class="game-header">
+                    <h2>연상 게임</h2>
+                    <div class="score-display">점수: <span id="associationScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <div class="association-word" id="associationWord">군대</div>
+                <p style="text-align: center;">관련된 단어를 모두 선택하세요</p>
+                <div class="association-list" id="associationList"></div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="checkAssociation()">확인</button>
+                    <button onclick="newAssociation()">다음 문제</button>
+                </div>
+            </div>
+            
+            <!-- 암호 해독 -->
+            <div class="game-container" id="cipherGame">
+                <div class="game-header">
+                    <h2>암호 해독</h2>
+                    <div class="score-display">점수: <span id="cipherScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p style="text-align: center;">암호를 해독하세요 (한 글자씩 밀려있습니다)</p>
+                <div class="cipher-text" id="cipherText">ㅎㅜㅏㅎ</div>
+                <input type="text" id="cipherInput" class="cipher-input" 
+                       placeholder="해독한 단어를 입력하세요" onkeypress="if(event.key==='Enter')checkCipher()">
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="checkCipher()">확인</button>
+                    <button onclick="newCipher()">다음 문제</button>
+                    <button onclick="showCipherHint()">힌트</button>
+                </div>
+            </div>
+            
+            <!-- 문장 만들기 -->
+            <div class="game-container" id="sentenceGame">
+                <div class="game-header">
+                    <h2>문장 만들기</h2>
+                    <div class="score-display">점수: <span id="sentenceScore">0</span></div>
+                    <button onclick="backToMenu()">메뉴로</button>
+                </div>
+                <p style="text-align: center;">단어를 조합해서 문장을 만드세요</p>
+                <div class="words-pool" id="wordsPool"></div>
+                <div class="sentence-area" id="sentenceArea">여기에 단어를 끌어다 놓으세요</div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="checkSentence()">확인</button>
+                    <button onclick="clearSentence()">초기화</button>
+                    <button onclick="newSentence()">새 단어</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scores = { chain: 0, chosung: 0, speed: 0, association: 0, cipher: 0, sentence: 0 };
+        let gameStates = {};
+        
+        // 단어 데이터
+        const words = {
+            military: ['군대', '훈련', '병사', '장교', '전투', '작전', '부대', '계급', '복무', '전역'],
+            daily: ['휴가', '외출', '외박', '면회', '편지', '점호', '청소', '당직', '근무', '식사'],
+            equipment: ['총기', '군복', '군화', '헬멧', '방탄', '장비', '배낭', '수통', '탄약', '무전기']
+        };
+        
+        function startGame(game) {
+            document.getElementById('wordMenu').style.display = 'none';
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById(game + 'Game').style.display = 'block';
+            
+            if (game === 'chain') newChain();
+            else if (game === 'chosung') newChosung();
+            else if (game === 'association') newAssociation();
+            else if (game === 'cipher') newCipher();
+            else if (game === 'sentence') newSentence();
+        }
+        
+        function backToMenu() {
+            document.querySelectorAll('.game-container').forEach(g => g.style.display = 'none');
+            document.getElementById('wordMenu').style.display = 'grid';
+        }
+        
+        // 끝말잇기
+        function newChain() {
+            const startWords = ['군대', '훈련', '병영', '전투'];
+            const startWord = startWords[Math.floor(Math.random() * startWords.length)];
+            gameStates.chain = { words: [startWord], used: new Set([startWord]) };
+            
+            const chainDiv = document.getElementById('wordChain');
+            chainDiv.innerHTML = `<span class="chain-word">${startWord}</span>`;
+            document.getElementById('chainInput').value = '';
+            document.getElementById('chainInput').focus();
+        }
+        
+        function submitChain() {
+            const input = document.getElementById('chainInput').value.trim();
+            if (!input || input.length < 2) return;
+            
+            const lastWord = gameStates.chain.words[gameStates.chain.words.length - 1];
+            const lastChar = lastWord[lastWord.length - 1];
+            
+            if (input[0] !== lastChar) {
+                alert(`'${lastChar}'로 시작하는 단어를 입력하세요!`);
+                return;
+            }
+            
+            if (gameStates.chain.used.has(input)) {
+                alert('이미 사용한 단어입니다!');
+                return;
+            }
+            
+            gameStates.chain.words.push(input);
+            gameStates.chain.used.add(input);
+            scores.chain += 10;
+            
+            const chainDiv = document.getElementById('wordChain');
+            chainDiv.innerHTML += ` → <span class="chain-word">${input}</span>`;
+            document.getElementById('chainInput').value = '';
+            document.getElementById('chainScore').textContent = scores.chain;
+        }
+        
+        // 초성 퀴즈
+        const chosungQuiz = [
+            { chosung: 'ㄱㄷㅊㄹㄱ', answer: '군대출라가', hint: '군대 관련 속담' },
+            { chosung: 'ㅂㅅ', answer: '병사', hint: '계급' },
+            { chosung: 'ㅈㅇ', answer: '전역', hint: '모두가 기다리는 날' },
+            { chosung: 'ㅎㄱ', answer: '휴가', hint: '집에 가는 날' },
+            { chosung: 'ㅈㅎ', answer: '점호', hint: '아침 일과' }
+        ];
+        
+        function newChosung() {
+            const quiz = chosungQuiz[Math.floor(Math.random() * chosungQuiz.length)];
+            gameStates.chosung = quiz;
+            document.getElementById('chosungDisplay').textContent = quiz.chosung;
+            document.getElementById('chosungHint').textContent = quiz.hint;
+            document.getElementById('chosungInput').value = '';
+            document.getElementById('chosungInput').focus();
+        }
+        
+        function checkChosung() {
+            const input = document.getElementById('chosungInput').value.trim();
+            if (input === gameStates.chosung.answer) {
+                scores.chosung += 20;
+                document.getElementById('chosungScore').textContent = scores.chosung;
+                alert('정답입니다!');
+                newChosung();
+            } else {
+                alert('틀렸습니다. 다시 시도하세요!');
+            }
+        }
+        
+        // 스피드 퀴즈
+        let speedTimer = null;
+        function startSpeed() {
+            const allWords = [...words.military, ...words.daily, ...words.equipment];
+            gameStates.speed = {
+                word: allWords[Math.floor(Math.random() * allWords.length)],
+                startTime: Date.now(),
+                timeLimit: 5000
+            };
+            
+            document.getElementById('speedWord').textContent = gameStates.speed.word;
+            document.getElementById('speedInput').value = '';
+            document.getElementById('speedInput').focus();
+            
+            // 타이머 시작
+            clearInterval(speedTimer);
+            speedTimer = setInterval(() => {
+                const elapsed = Date.now() - gameStates.speed.startTime;
+                const percent = Math.max(0, 100 - (elapsed / gameStates.speed.timeLimit * 100));
+                document.getElementById('timerFill').style.width = percent + '%';
+                
+                if (percent <= 0) {
+                    clearInterval(speedTimer);
+                    alert('시간 초과!');
+                    startSpeed();
+                }
+            }, 50);
+        }
+        
+        function checkSpeed() {
+            const input = document.getElementById('speedInput').value;
+            if (input === gameStates.speed.word) {
+                clearInterval(speedTimer);
+                const time = Date.now() - gameStates.speed.startTime;
+                const points = Math.max(10, Math.floor(50 - time / 100));
+                scores.speed += points;
+                document.getElementById('speedScore').textContent = scores.speed;
+                alert(`정답! +${points}점`);
+                startSpeed();
+            }
+        }
+        
+        // 연상 게임
+        const associations = {
+            '군대': ['병사', '훈련', '복무', '계급', '전투'],
+            '휴가': ['외출', '외박', '집', '휴식', '가족'],
+            '훈련': ['사격', '행군', '전투', '체력', '교육']
+        };
+        
+        function newAssociation() {
+            const keys = Object.keys(associations);
+            const key = keys[Math.floor(Math.random() * keys.length)];
+            const correct = associations[key];
+            const allWords = [...words.military, ...words.daily, ...words.equipment];
+            const options = [...correct];
+            
+            // 오답 추가
+            while (options.length < 8) {
+                const word = allWords[Math.floor(Math.random() * allWords.length)];
+                if (!options.includes(word)) options.push(word);
+            }
+            
+            gameStates.association = { word: key, correct: new Set(correct), selected: new Set() };
+            document.getElementById('associationWord').textContent = key;
+            
+            const listDiv = document.getElementById('associationList');
+            listDiv.innerHTML = options.sort(() => Math.random() - 0.5).map(word => 
+                `<div class="association-item" onclick="toggleAssociation('${word}')">${word}</div>`
+            ).join('');
+        }
+        
+        function toggleAssociation(word) {
+            if (gameStates.association.selected.has(word)) {
+                gameStates.association.selected.delete(word);
+            } else {
+                gameStates.association.selected.add(word);
+            }
+            
+            const items = document.querySelectorAll('.association-item');
+            items.forEach(item => {
+                if (item.textContent === word) {
+                    item.style.background = gameStates.association.selected.has(word) ? 
+                        'var(--primary)' : 'var(--bg-hover)';
+                    item.style.color = gameStates.association.selected.has(word) ? 'white' : '';
+                }
+            });
+        }
+        
+        function checkAssociation() {
+            let correct = 0;
+            const items = document.querySelectorAll('.association-item');
+            
+            items.forEach(item => {
+                const word = item.textContent;
+                if (gameStates.association.correct.has(word) && gameStates.association.selected.has(word)) {
+                    item.classList.add('correct');
+                    correct++;
+                } else if (!gameStates.association.correct.has(word) && gameStates.association.selected.has(word)) {
+                    item.classList.add('wrong');
+                }
+            });
+            
+            const points = correct * 10;
+            scores.association += points;
+            document.getElementById('associationScore').textContent = scores.association;
+            
+            setTimeout(() => {
+                alert(`${correct}개 맞췄습니다! +${points}점`);
+                newAssociation();
+            }, 1000);
+        }
+        
+        // 암호 해독
+        function newCipher() {
+            const targetWords = ['휴가', '전역', '병사', '훈련', '외출'];
+            const word = targetWords[Math.floor(Math.random() * targetWords.length)];
+            
+            // 한글 자음/모음 분리 후 섞기 (간단한 예시)
+            const scrambled = word.split('').map(char => {
+                const code = char.charCodeAt(0);
+                return String.fromCharCode(code + 1);
+            }).join('');
+            
+            gameStates.cipher = { original: word, scrambled: scrambled };
+            document.getElementById('cipherText').textContent = scrambled;
+            document.getElementById('cipherInput').value = '';
+        }
+        
+        function checkCipher() {
+            const input = document.getElementById('cipherInput').value;
+            if (input === gameStates.cipher.original) {
+                scores.cipher += 30;
+                document.getElementById('cipherScore').textContent = scores.cipher;
+                alert('정답입니다!');
+                newCipher();
+            } else {
+                alert('틀렸습니다!');
+            }
+        }
+        
+        function showCipherHint() {
+            alert(`첫 글자: ${gameStates.cipher.original[0]}`);
+        }
+        
+        // 문장 만들기
+        function newSentence() {
+            const sentenceWords = ['나는', '군대에서', '열심히', '훈련을', '받고', '있다', 
+                                  '우리', '부대는', '최고다', '전우들과', '함께', '힘내자'];
+            gameStates.sentence = { words: sentenceWords, arranged: [] };
+            
+            const poolDiv = document.getElementById('wordsPool');
+            poolDiv.innerHTML = sentenceWords.map((word, i) => 
+                `<div class="word-chip" onclick="addToSentence(${i})">${word}</div>`
+            ).join('');
+            
+            document.getElementById('sentenceArea').textContent = '';
+        }
+        
+        function addToSentence(index) {
+            const word = gameStates.sentence.words[index];
+            gameStates.sentence.arranged.push(word);
+            
+            const sentenceDiv = document.getElementById('sentenceArea');
+            sentenceDiv.textContent = gameStates.sentence.arranged.join(' ');
+            
+            // 클릭한 단어 숨기기
+            const chips = document.querySelectorAll('.word-chip');
+            chips[index].style.display = 'none';
+        }
+        
+        function clearSentence() {
+            gameStates.sentence.arranged = [];
+            document.getElementById('sentenceArea').textContent = '';
+            document.querySelectorAll('.word-chip').forEach(chip => chip.style.display = 'block');
+        }
+        
+        function checkSentence() {
+            const sentence = gameStates.sentence.arranged.join(' ');
+            if (sentence.length > 10) {
+                scores.sentence += 20;
+                document.getElementById('sentenceScore').textContent = scores.sentence;
+                alert('좋은 문장입니다! +20점');
+                newSentence();
+            } else {
+                alert('더 긴 문장을 만들어보세요!');
+            }
+        }
+    </script>
+</body>
+</html>
