@@ -300,6 +300,18 @@
             .button-group {
                 flex-direction: column;
             }
+            
+            .back-btn {
+                display: inline-block;
+                padding: 8px 16px;
+                color: var(--text-secondary);
+                text-decoration: none;
+                margin-bottom: 20px;
+            }
+
+.back-btn:hover {
+    color: var(--text-primary);
+}
         }
     </style>
 </head>
@@ -531,5 +543,6 @@
             document.getElementById('userId').focus();
         };
     </script>
+    <a href="index.html" class="back-btn">← 메인으로 돌아가기</a>
 </body>
 </html>
