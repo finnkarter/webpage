@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>군대 대시보드 - 로그인</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 전체 텍스트 가시성 개선 */
+        * {
+            color: white;
+        }
+        
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: white;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(74,158,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .login-header {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+        
+        .login-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .login-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .login-subtitle {
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .form-group {
+            position: relative;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .form-input::placeholder {
+            color: #666;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 3px rgba(74,158,255,0.2);
+            background: #333;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            cursor: pointer;
+            color: #b0b0b0;
+            font-size: 1.2em;
+            user-select: none;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74,158,255,0.4);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            background: rgba(255,74,74,0.2);
+            border: 1px solid #ff4a4a;
+            color: #ff4a4a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(74,255,158,0.2);
+            border: 1px solid #4aff9e;
+            color: #4aff9e;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .register-link {
+            margin-top: 25px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .register-link a {
+            color: #4a9eff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .register-link a:hover {
+            color: #4aff9e;
+        }
+        
+        /* 로그인 성공 후 정보 화면 */
+        .welcome-screen {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+            color: white;
+        }
+        
+        .welcome-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #4a9eff;
+        }
+        
+        .user-info-card {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 1px solid #444;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        
+        .info-label {
+            color: #b0b0b0;
+        }
+        
+        .info-value {
+            color: #4a9eff;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+
+        .service-progress {
+            margin: 30px 0;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .info-label {
+            color: var(--text-secondary);
+        }
+        
+        .info-value {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .service-progress {
+            margin: 30px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--bg-hover);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .main-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .main-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74,158,255,0.4);
+        }
+        
+        .logout-btn {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+        }
+        
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            border-radius: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 20px;
+            }
+            
+            .login-title {
+                font-size: 1.5em;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+            </div>
+            
+            <!-- 로그인 화면 -->
+            <div id="loginScreen">
+                <div class="login-header">
+                    <div class="login-icon">🎖️</div>
+                    <h1 class="login-title">군대 대시보드</h1>
+                    <p class="login-subtitle">복무 관리 시스템</p>
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">아이디</label>
+                        <input type="text" id="username" class="form-input" 
+                               placeholder="아이디를 입력하세요" required
+                               autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" class="form-input" 
+                               placeholder="비밀번호를 입력하세요" required
+                               autocomplete="current-password">
+                        <span class="password-toggle" onclick="togglePassword()">👁️</span>
+                    </div>
+                    
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">로그인 상태 유지</label>
+                    </div>
+                    
+                    <button type="submit" class="login-btn">로그인</button>
+                </form>
+                
+                <div class="register-link">
+                    처음이신가요? <a href="register.html">회원가입</a>
+                </div>
+            </div>
+            
+            <!-- 환영 화면 -->
+            <div id="welcomeScreen" class="welcome-screen">
+                <div class="login-icon">🎉</div>
+                <h2 class="welcome-title">환영합니다!</h2>
+                
+                <div class="user-info-card">
+                    <div class="info-item">
+                        <span class="info-label">아이디</span>
+                        <span class="info-value" id="userIdDisplay">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">이름</span>
+                        <span class="info-value" id="userNameDisplay">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">입대일</span>
+                        <span class="info-value" id="enlistDateDisplay">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">전역예정일</span>
+                        <span class="info-value" id="dischargeDateDisplay">-</span>
+                    </div>
+                </div>
+                
+                <div class="service-progress">
+                    <h3>복무 진행률</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar">0%</div>
+                    </div>
+                    <p style="color: var(--text-secondary);">
+                        복무일: <span id="servedDays">0</span>일 | 
+                        남은날: <span id="remainingDays">0</span>일
+                    </p>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="main-btn" onclick="goToMain()">메인 페이지로 이동</button>
+                    <button class="logout-btn" onclick="logout()">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 로그인 처리
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            // 로딩 표시
+            document.getElementById('loading').style.display = 'flex';
+            hideMessages();
+            
+            setTimeout(() => {
+                // 저장된 사용자 정보 확인
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                
+                // 테스트용 기본 계정
+                if (!users['test']) {
+                    users['test'] = {
+                        password: '1234',
+                        name: '홍길동',
+                        enlistDate: '2024-01-01',
+                        serviceMonths: 18,
+                        createdAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+                
+                if (users[username] && users[username].password === password) {
+                    // 로그인 성공
+                    localStorage.setItem('currentUser', username);
+                    localStorage.setItem('rememberLogin', remember);
+                    
+                    // 마지막 로그인 시간 저장
+                    users[username].lastLogin = new Date().toISOString();
+                    localStorage.setItem('users', JSON.stringify(users));
+                    
+                    // 환영 화면 표시
+                    showWelcomeScreen(username, users[username]);
+                } else if (!users[username]) {
+                    showError('등록되지 않은 아이디입니다.');
+                } else {
+                    showError('비밀번호가 일치하지 않습니다.');
+                }
+                
+                document.getElementById('loading').style.display = 'none';
+            }, 1000);
+        }
+        
+        // 환영 화면 표시
+        function showWelcomeScreen(username, userInfo) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'block';
+            
+            // 사용자 정보 표시
+            document.getElementById('userIdDisplay').textContent = username;
+            document.getElementById('userNameDisplay').textContent = userInfo.name || '미등록';
+            document.getElementById('enlistDateDisplay').textContent = formatDate(userInfo.enlistDate);
+            
+            // 전역일 계산
+            const dischargeDate = calculateDischargeDate(userInfo.enlistDate, userInfo.serviceMonths || 18);
+            document.getElementById('dischargeDateDisplay').textContent = formatDate(dischargeDate);
+            
+            // 복무 진행률 계산
+            const now = new Date();
+            const enlist = new Date(userInfo.enlistDate);
+            const discharge = new Date(dischargeDate);
+            
+            const totalDays = Math.ceil((discharge - enlist) / (1000 * 60 * 60 * 24));
+            const servedDays = Math.ceil((now - enlist) / (1000 * 60 * 60 * 24));
+            const remainingDays = Math.ceil((discharge - now) / (1000 * 60 * 60 * 24));
+            const progress = Math.min(100, Math.max(0, (servedDays / totalDays) * 100));
+            
+            document.getElementById('servedDays').textContent = Math.max(0, servedDays);
+            document.getElementById('remainingDays').textContent = Math.max(0, remainingDays);
+            
+            // 프로그레스 바 애니메이션
+            setTimeout(() => {
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress.toFixed(1) + '%';
+            }, 100);
+        }
+        
+        // 메인 페이지로 이동
+        function goToMain() {
+            window.location.href = 'index.html';
+        }
+        
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('rememberLogin');
+            location.reload();
+        }
+        
+        // 비밀번호 표시/숨기기
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggle = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+        
+        // 회원가입
+        function showRegister() {
+            const username = prompt('사용할 아이디를 입력하세요:');
+            if (!username || username.length < 3) {
+                alert('아이디는 3자 이상이어야 합니다.');
+                return;
+            }
+            
+            const password = prompt('비밀번호를 입력하세요:');
+            if (!password || password.length < 4) {
+                alert('비밀번호는 4자 이상이어야 합니다.');
+                return;
+            }
+            
+            const name = prompt('이름을 입력하세요:');
+            if (!name) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+            
+            const enlistDate = prompt('입대일을 입력하세요 (YYYY-MM-DD):');
+            if (!enlistDate || !enlistDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                alert('올바른 날짜 형식이 아닙니다.');
+                return;
+            }
+            
+            // 사용자 정보 저장
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            
+            if (users[username]) {
+                alert('이미 사용중인 아이디입니다.');
+                return;
+            }
+            
+            users[username] = {
+                password: password,
+                name: name,
+                enlistDate: enlistDate,
+                serviceMonths: 18,
+                createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showSuccess('회원가입이 완료되었습니다! 로그인해주세요.');
+            
+            // 폼에 자동 입력
+            document.getElementById('username').value = username;
+            document.getElementById('password').focus();
+        }
+        
+        // 전역일 계산
+        function calculateDischargeDate(enlistDate, months) {
+            const date = new Date(enlistDate);
+            date.setMonth(date.getMonth() + months);
+            date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 날짜 포맷
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        // 메시지 표시 함수
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // 페이지 로드 시 포커스
+        window.onload = () => {
+            document.getElementById('username').focus();
+        };
+    </script>
+</body>
+</html>

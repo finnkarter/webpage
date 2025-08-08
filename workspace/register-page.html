@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>군대 대시보드 - 회원가입</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 전체 텍스트 가시성 개선 */
+        * {
+            color: white;
+        }
+        
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: white;
+        }
+        
+        .register-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        
+        .register-box {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .register-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(74,158,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .register-header {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+        
+        .register-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .register-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4a9eff, #4aff9e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .register-subtitle {
+            color: #b0b0b0;
+            font-size: 1em;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .section-title {
+            color: #4a9eff;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .form-group label .required {
+            color: #ff4a4a;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .form-input::placeholder {
+            color: #666;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 3px rgba(74,158,255,0.2);
+            background: #333;
+        }
+        
+        .form-input[type="date"] {
+            color-scheme: dark;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            cursor: pointer;
+            color: #b0b0b0;
+            font-size: 1.2em;
+            user-select: none;
+        }
+        
+        .service-type {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .radio-group {
+            display: flex;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .radio-group:hover {
+            border-color: #4a9eff;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .radio-group label {
+            margin: 0;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .radio-group input[type="radio"]:checked + label {
+            color: #4a9eff;
+        }
+        
+        .terms {
+            display: flex;
+            align-items: start;
+            gap: 10px;
+            margin: 20px 0;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .terms input {
+            margin-top: 3px;
+            cursor: pointer;
+        }
+        
+        .error-message {
+            background: rgba(255,74,74,0.2);
+            border: 1px solid #ff4a4a;
+            color: #ff4a4a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(74,255,158,0.2);
+            border: 1px solid #4aff9e;
+            color: #4aff9e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .register-btn {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #4a9eff, #4aff9e);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74,158,255,0.4);
+        }
+        
+        .register-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .cancel-btn {
+            flex: 1;
+            padding: 15px;
+            background: #2a2a2a;
+            color: white;
+            border: 2px solid #444;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .cancel-btn:hover {
+            background: #333;
+            border-color: #666;
+        }
+        
+        .login-link {
+            margin-top: 25px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        
+        .login-link a {
+            color: #4a9eff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            color: #4aff9e;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @media (max-width: 480px) {
+            .register-box {
+                padding: 30px 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .service-type {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-box">
+            <div class="register-header">
+                <div class="register-icon">📝</div>
+                <h1 class="register-title">회원가입</h1>
+                <p class="register-subtitle">군대 대시보드에 오신 것을 환영합니다</p>
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+            
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <!-- 계정 정보 -->
+                <div class="form-section">
+                    <h3 class="section-title">계정 정보</h3>
+                    <div class="form-group">
+                        <label for="userId">아이디 <span class="required">*</span></label>
+                        <input type="text" id="userId" class="form-input" 
+                               placeholder="영문, 숫자 3-20자" required
+                               pattern="[a-zA-Z0-9]{3,20}"
+                               title="영문과 숫자만 사용하여 3-20자로 입력하세요">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">비밀번호 <span class="required">*</span></label>
+                            <input type="password" id="password" class="form-input" 
+                                   placeholder="4자 이상" required
+                                   minlength="4">
+                            <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">비밀번호 확인 <span class="required">*</span></label>
+                            <input type="password" id="confirmPassword" class="form-input" 
+                                   placeholder="비밀번호 재입력" required>
+                            <span class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 개인 정보 -->
+                <div class="form-section">
+                    <h3 class="section-title">개인 정보</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">이름 <span class="required">*</span></label>
+                            <input type="text" id="name" class="form-input" 
+                                   placeholder="실명 입력" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="militaryNumber">군번</label>
+                            <input type="text" id="militaryNumber" class="form-input" 
+                                   placeholder="00-00000000"
+                                   pattern="[0-9]{2}-[0-9]{8}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 복무 정보 -->
+                <div class="form-section">
+                    <h3 class="section-title">복무 정보</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="enlistDate">입대일 <span class="required">*</span></label>
+                            <input type="date" id="enlistDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceType">복무 구분 <span class="required">*</span></label>
+                            <div class="service-type">
+                                <div class="radio-group">
+                                    <input type="radio" id="army" name="serviceType" value="18" checked>
+                                    <label for="army">육군/해병 (18개월)</label>
+                                </div>
+                                <div class="radio-group">
+                                    <input type="radio" id="navy" name="serviceType" value="20">
+                                    <label for="navy">해군 (20개월)</label>
+                                </div>
+                                <div class="radio-group">
+                                    <input type="radio" id="airforce" name="serviceType" value="21">
+                                    <label for="airforce">공군 (21개월)</label>
+                                </div>
+                                <div class="radio-group">
+                                    <input type="radio" id="substitute" name="serviceType" value="12">
+                                    <label for="substitute">보충역 (12개월)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="terms">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">
+                        개인정보 수집 및 이용에 동의합니다. 
+                        (모든 정보는 브라우저에만 저장됩니다)
+                    </label>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="register-btn">가입하기</button>
+                    <button type="button" class="cancel-btn" onclick="goToLogin()">취소</button>
+                </div>
+            </form>
+            
+            <div class="login-link">
+                이미 계정이 있으신가요? <a href="login.html">로그인</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 회원가입 처리
+        function handleRegister(e) {
+            e.preventDefault();
+            hideMessages();
+            
+            // 입력값 가져오기
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const name = document.getElementById('name').value;
+            const militaryNumber = document.getElementById('militaryNumber').value;
+            const enlistDate = document.getElementById('enlistDate').value;
+            const serviceMonths = parseInt(document.querySelector('input[name="serviceType"]:checked').value);
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            // 유효성 검사
+            if (password !== confirmPassword) {
+                showError('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            if (!agreeTerms) {
+                showError('이용약관에 동의해주세요.');
+                return;
+            }
+            
+            // 기존 사용자 확인
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            
+            if (users[userId]) {
+                showError('이미 사용중인 아이디입니다.');
+                return;
+            }
+            
+            // 사용자 정보 저장
+            users[userId] = {
+                password: password,
+                name: name,
+                militaryNumber: militaryNumber,
+                enlistDate: enlistDate,
+                serviceMonths: serviceMonths,
+                createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // 군대 정보도 함께 저장 (사용자별로)
+            const militaryData = {
+                enlistDate: enlistDate,
+                serviceMonths: serviceMonths,
+                dischargeDate: calculateDischargeDate(enlistDate, serviceMonths)
+            };
+            
+            localStorage.setItem(`militaryData_${userId}`, JSON.stringify(militaryData));
+            
+            showSuccess('회원가입이 완료되었습니다! 잠시 후 로그인 페이지로 이동합니다...');
+            
+            // 3초 후 로그인 페이지로 이동
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        }
+        
+        // 비밀번호 표시/숨기기
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggle = passwordInput.nextElementSibling;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+        
+        // 전역일 계산
+        function calculateDischargeDate(enlistDate, months) {
+            const date = new Date(enlistDate);
+            date.setMonth(date.getMonth() + months);
+            date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 로그인 페이지로 이동
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+        
+        // 메시지 표시 함수
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // 오늘 날짜를 최대값으로 설정
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('enlistDate').max = today;
+            document.getElementById('userId').focus();
+        };
+    </script>
+</body>
+</html>
